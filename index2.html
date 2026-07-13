@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hunters 2.5: หน่วยล่าท้าฝุ่น</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;800&family=Mali:wght@400;600&family=Chakra+Petch:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        kanit: ['Kanit', 'sans-serif'],
+                        mali: ['Mali', 'cursive'],
+                        chakra: ['Chakra Petch', 'sans-serif'],
+                    },
+                    colors: {
+                        cyber: { blue: '#00f3ff', purple: '#b100ff', green: '#00ff66', yellow: '#ffde00', red: '#ff003c', dark: '#0a0a1a' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #050510; touch-action: none; user-select: none; }
+        
+        /* Glassmorphism */
+        .glass {
+            background: rgba(10, 10, 26, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        .glass-panel { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; }
+        
+        /* Animations */
+        @keyframes pulse-neon {
+            0%, 100% { box-shadow: 0 0 10px #00f3ff, 0 0 20px #00f3ff; }
+            50% { box-shadow: 0 0 20px #00f3ff, 0 0 40px #00f3ff; }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes scanline {
+            0% { top: -100%; }
+            100% { top: 100%; }
+        }
+        
+        .neon-text { text-shadow: 0 0 5px #00f3ff, 0 0 10px #00f3ff; }
+        .neon-text-red { text-shadow: 0 0 5px #ff003c, 0 0 10px #ff003c; }
+        .btn-neon { transition: all 0.2s; }
+        .btn-neon:hover { transform: scale(1.05); animation: pulse-neon 1.5s infinite; }
+        .btn-neon:active { transform: scale(0.95); }
+        
+        .floating { animation: float 3s ease-in-out infinite; }
+        
+        /* Scanline Overlay */
+        .scanlines::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 10;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        #game-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
+        .pointer-events-auto { pointer-events: auto; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); }
+        ::-webkit-scrollbar-thumb { background: #00f3ff; border-radius: 4px; }
+    </style>
+</head>
+<body class="text-white font-mali scanlines">
+
+    <!-- Video Element (Hidden, used for Camera) -->
+    <video id="webcam" autoplay playsinline style="display:none;"></video>
+    
+    <!-- Main Game Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- UI Layer -->
+    <div id="ui-layer" class="flex flex-col items-center justify-center p-4">
+        
+        <!-- 1. Loading Screen -->
+        <div id="screen-loading" class="absolute inset-0 flex flex-col items-center justify-center glass z-50 pointer-events-auto">
+            <h1 class="font-kanit text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyber-blue to-cyber-purple neon-text mb-2">HUNTERS 2.5</h1>
+            <h2 class="text-2xl text-cyber-blue mb-8">หน่วยล่าท้าฝุ่น</h2>
+            <div class="w-16 h-16 border-4 border-cyber-blue border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p id="loading-text" class="text-lg">กำลังเตรียมระบบเกม...</p>
+            <button id="btn-init-start" class="hidden mt-6 px-8 py-3 bg-cyber-blue text-black font-bold rounded-full btn-neon font-kanit text-xl">
+                คลิกเพื่อเข้าสู่เกม
+            </button>
+        </div>
+
+        <!-- 2. Start Screen -->
+        <div id="screen-start" class="hidden absolute inset-0 flex flex-col items-center justify-center glass z-40 pointer-events-auto">
+            <div class="floating text-center mb-8">
+                <h1 class="font-kanit text-7xl md:text-8xl font-black text-white neon-text tracking-wider">HUNTERS 2.5</h1>
+                <h2 class="font-kanit text-3xl md:text-4xl text-cyber-yellow mt-2">หน่วยล่าท้าฝุ่น</h2>
+                <p class="mt-4 text-xl text-gray-300">รวมพลังฮีโร่ ปกป้องปอด พิชิตภัยฝุ่น PM 2.5</p>
+            </div>
+            <div class="flex flex-col md:flex-row gap-4">
+                <button onclick="ui.showScreen('screen-hero')" class="px-8 py-4 bg-gradient-to-r from-cyber-blue to-blue-600 text-white font-bold rounded-xl btn-neon font-kanit text-2xl flex items-center gap-2">
+                    🎯 เริ่มภารกิจ
+                </button>
+                <button onclick="ui.showModal('modal-howto')" class="px-8 py-4 glass-panel text-white font-bold rounded-xl hover:bg-white/10 transition font-kanit text-xl">
+                    📖 วิธีเล่น
+                </button>
+                <button onclick="ui.showLeaderboard()" class="px-8 py-4 glass-panel text-white font-bold rounded-xl hover:bg-white/10 transition font-kanit text-xl">
+                    🏆 ประวัติการเล่น
+                </button>
+            </div>
+            <button onclick="audio.toggleMute()" class="absolute top-4 right-4 text-3xl opacity-70 hover:opacity-100" id="btn-mute-start">🔊</button>
+        </div>
+
+        <!-- 3. Hero Selection Screen -->
+        <div id="screen-hero" class="hidden absolute inset-0 flex flex-col items-center justify-center glass z-40 pointer-events-auto p-4">
+            <h2 class="font-kanit text-4xl neon-text mb-6">ตั้งชื่อฮีโร่ของคุณ</h2>
+            <input type="text" id="input-name" placeholder="พิมพ์ชื่อที่นี่..." class="text-center w-full max-w-sm px-4 py-3 rounded-xl bg-black/50 border-2 border-cyber-blue text-white text-xl mb-8 focus:outline-none focus:shadow-[0_0_15px_#00f3ff]">
+            
+            <h3 class="text-2xl mb-4">เลือกหน่วยล่าฝุ่น</h3>
+            <div class="flex flex-wrap justify-center gap-4 max-w-4xl">
+                <!-- Sky -->
+                <div onclick="ui.selectHero('sky')" class="hero-card cursor-pointer glass-panel p-6 flex flex-col items-center hover:scale-105 transition border-2 border-transparent w-48">
+                    <div class="text-6xl mb-2">🛡️</div>
+                    <h4 class="font-kanit text-xl font-bold text-cyber-blue">สกาย</h4>
+                    <p class="text-sm text-gray-300">สายโล่ N95</p>
+                    <div class="mt-2 text-xs bg-cyber-blue/20 p-2 rounded text-center">สกิล: กางโล่กันความเสียหาย<br>HP: 150</div>
+                </div>
+                <!-- Zee -->
+                <div onclick="ui.selectHero('zee')" class="hero-card cursor-pointer glass-panel p-6 flex flex-col items-center hover:scale-105 transition border-2 border-transparent w-48">
+                    <div class="text-6xl mb-2">⚡</div>
+                    <h4 class="font-kanit text-xl font-bold text-cyber-yellow">ซี</h4>
+                    <p class="text-sm text-gray-300">จอมลุยโอเมก้า</p>
+                    <div class="mt-2 text-xs bg-cyber-yellow/20 p-2 rounded text-center">สกิล: ระเบิดล้างจอ<br>HP: 100</div>
+                </div>
+                <!-- Bubble -->
+                <div onclick="ui.selectHero('bubble')" class="hero-card cursor-pointer glass-panel p-6 flex flex-col items-center hover:scale-105 transition border-2 border-transparent w-48">
+                    <div class="text-6xl mb-2">🤖</div>
+                    <h4 class="font-kanit text-xl font-bold text-cyber-green">บับเบิ้ล</h4>
+                    <p class="text-sm text-gray-300">บอทพิทักษ์ปอด</p>
+                    <div class="mt-2 text-xs bg-cyber-green/20 p-2 rounded text-center">สกิล: ฮีลฟื้นฟู HP<br>HP: 120</div>
+                </div>
+            </div>
+            
+            <div class="mt-8 flex gap-4">
+                <button onclick="ui.showScreen('screen-start')" class="px-6 py-2 glass-panel text-white rounded-lg">กลับ</button>
+                <button onclick="ui.confirmHero()" class="px-8 py-2 bg-cyber-blue text-black font-bold rounded-lg btn-neon">ยืนยัน</button>
+            </div>
+        </div>
+
+        <!-- 4. Map Screen -->
+        <div id="screen-map" class="hidden absolute inset-0 flex flex-col items-center justify-center glass z-40 pointer-events-auto p-4">
+            <h2 class="font-kanit text-4xl neon-text mb-8">แผนที่ภารกิจ</h2>
+            <div class="flex flex-col md:flex-row gap-4 items-center">
+                <!-- Levels populated by JS -->
+                <div id="level-container" class="flex flex-wrap justify-center gap-4"></div>
+            </div>
+            <div class="mt-12 flex gap-4">
+                <button onclick="ui.showScreen('screen-start')" class="px-6 py-2 glass-panel text-white rounded-lg">เมนูหลัก</button>
+            </div>
+        </div>
+
+        <!-- 5. Gameplay HUD -->
+        <div id="hud" class="hidden absolute inset-0 pointer-events-none p-4 flex flex-col justify-between z-10">
+            <!-- Top Bar -->
+            <div class="flex justify-between items-start">
+                <!-- Left: Info -->
+                <div class="glass-panel p-3 min-w-[200px]">
+                    <h3 id="hud-level-name" class="font-kanit font-bold text-xl text-cyber-blue">ด่านที่ 1</h3>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-2xl">⏱️</span>
+                        <span id="hud-time" class="font-chakra text-2xl font-bold">00</span>
+                    </div>
+                    <div class="mt-1 text-sm font-bold flex items-center gap-2">
+                        AQI: <span id="hud-aqi" class="px-2 py-0.5 rounded bg-green-500 text-black">ดี</span>
+                    </div>
+                </div>
+                
+                <!-- Center: Input Mode -->
+                <div id="hud-input-mode" class="glass-panel px-4 py-1 text-sm opacity-70">📷 โหมด AR</div>
+
+                <!-- Right: Player Stats -->
+                <div class="glass-panel p-3 min-w-[200px] text-right">
+                    <div class="font-chakra text-2xl font-bold text-cyber-yellow">SCORE: <span id="hud-score">0</span></div>
+                    <div class="mt-2">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span id="hud-hero-name">Hero</span>
+                            <span>HP: <span id="hud-hp-text">100</span></span>
+                        </div>
+                        <div class="w-full bg-gray-700 h-4 rounded-full overflow-hidden border border-white/20">
+                            <div id="hud-hp-bar" class="h-full bg-cyber-green transition-all duration-300 w-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center: Instructions & Warnings -->
+            <div class="text-center mt-20">
+                <div id="hud-warning" class="hidden font-kanit text-4xl text-cyber-red neon-text-red font-bold animate-pulse">คำเตือน!</div>
+                <div id="hud-instruction" class="mt-4 font-kanit text-2xl text-white neon-text transition-opacity duration-500 opacity-0"></div>
+                <!-- Progress ring for Level 4 -->
+                <div id="hud-progress-container" class="hidden mt-8 relative w-32 h-32 mx-auto">
+                    <svg class="w-full h-full transform -rotate-90">
+                        <circle cx="64" cy="64" r="60" stroke="rgba(255,255,255,0.2)" stroke-width="8" fill="none" />
+                        <circle id="hud-progress-ring" cx="64" cy="64" r="60" stroke="#00f3ff" stroke-width="8" fill="none" stroke-dasharray="377" stroke-dashoffset="377" class="transition-all duration-100" />
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center text-3xl">🫁</div>
+                </div>
+            </div>
+
+            <!-- Bottom Bar -->
+            <div class="flex justify-between items-end">
+                <!-- Left: Pause & Control info -->
+                <div class="flex gap-2 pointer-events-auto">
+                    <button onclick="game.pause()" class="w-12 h-12 glass-panel flex items-center justify-center text-xl hover:bg-white/20">⏸️</button>
+                    <div class="glass-panel px-3 py-2 text-sm flex items-center gap-2">
+                        <span>ท่าทาง:</span> <span id="hud-gesture" class="text-2xl">🖐️</span>
+                    </div>
+                </div>
+                
+                <!-- Right: Skill Button -->
+                <div class="pointer-events-auto">
+                    <button id="btn-skill" onclick="game.useSkill()" class="relative w-20 h-20 rounded-full glass-panel flex items-center justify-center text-3xl border-2 border-cyber-blue overflow-hidden hover:scale-105 active:scale-95 transition-all">
+                        <span id="skill-icon">🛡️</span>
+                        <div id="skill-cooldown" class="absolute inset-0 bg-black/70 flex items-center justify-center text-xl font-chakra font-bold text-white hidden">0</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Result / Educational Popup -->
+        <div id="screen-result" class="hidden absolute inset-0 flex flex-col items-center justify-center glass z-50 pointer-events-auto p-4">
+            <div class="glass-panel p-8 max-w-2xl w-full text-center relative overflow-hidden">
+                <!-- Dr. Air Graphic (Emoji fallback) -->
+                <div class="absolute -top-6 -left-6 text-8xl opacity-20">👨‍🔬</div>
+                
+                <h2 id="result-title" class="font-kanit text-4xl neon-text mb-2">ด่านสำเร็จ!</h2>
+                <div class="flex justify-center gap-2 text-4xl mb-4" id="result-stars">⭐ ⭐ ⭐</div>
+                
+                <div class="flex justify-center gap-8 mb-6 font-chakra text-xl">
+                    <div>คะแนน: <span id="result-score" class="text-cyber-yellow font-bold">0</span></div>
+                    <div>HP: <span id="result-hp" class="text-cyber-green font-bold">0</span></div>
+                </div>
+
+                <div class="bg-black/40 p-4 rounded-lg mb-6 border-l-4 border-cyber-blue text-left relative">
+                    <div class="text-3xl absolute -top-4 -right-4">💡</div>
+                    <p class="font-bold text-cyber-blue mb-1">ดร.แอร์ แนะนำ:</p>
+                    <p id="result-edu-text" class="text-sm md:text-base leading-relaxed"></p>
+                </div>
+
+                <div class="flex justify-center gap-4">
+                    <button onclick="ui.showScreen('screen-map')" class="px-6 py-2 glass-panel rounded-lg hover:bg-white/10">กลับแผนที่</button>
+                    <button id="btn-next-level" onclick="game.nextLevel()" class="px-8 py-2 bg-cyber-blue text-black font-bold rounded-lg btn-neon">ด่านต่อไป ➡️</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals (How to play, Leaderboard, Pause) -->
+        <!-- How To Play -->
+        <div id="modal-howto" class="hidden absolute inset-0 flex items-center justify-center bg-black/80 z-50 pointer-events-auto p-4 backdrop-blur-sm">
+            <div class="glass-panel p-6 max-w-xl w-full max-h-[80vh] overflow-y-auto">
+                <h2 class="font-kanit text-3xl text-cyber-blue mb-4 border-b border-white/20 pb-2">📖 วิธีเล่น</h2>
+                <ul class="space-y-4 text-sm md:text-base">
+                    <li class="flex gap-3"><span class="text-2xl">📷</span> <span><b>โหมด AR:</b> อนุญาตให้ใช้กล้อง และถอยห่างจากจอเล็กน้อยเพื่อให้เห็นมือชัดเจน</span></li>
+                    <li class="flex gap-3"><span class="text-2xl">🖐️</span> <span><b>แบมือ (Open):</b> หยิบหน้ากาก, โจมตีบอส, ฝึกหายใจ</span></li>
+                    <li class="flex gap-3"><span class="text-2xl">👆</span> <span><b>ชี้นิ้ว (Point):</b> เล็งและยิงสเปรย์สลายฝุ่น</span></li>
+                    <li class="flex gap-3"><span class="text-2xl">✊</span> <span><b>กำมือ (Fist):</b> จับไอเทมอาหารเพื่อลากลงตะกร้า</span></li>
+                    <li class="flex gap-3"><span class="text-2xl">🖱️</span> <span><b>โหมดสำรอง:</b> หากกล้องไม่ทำงาน สามารถใช้ <b>เมาส์</b> หรือ <b>ทัชสกรีน</b> คลิกค้างเพื่อจับ/ลาก และคลิกเพื่อยิงได้</span></li>
+                </ul>
+                <button onclick="ui.hideModal('modal-howto')" class="mt-6 w-full py-2 bg-white/20 rounded-lg hover:bg-white/30">ปิด</button>
+            </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div id="modal-leaderboard" class="hidden absolute inset-0 flex items-center justify-center bg-black/80 z-50 pointer-events-auto p-4 backdrop-blur-sm">
+            <div class="glass-panel p-6 max-w-2xl w-full max-h-[80vh] flex flex-col">
+                <div class="flex justify-between items-center mb-4 border-b border-white/20 pb-2">
+                    <h2 class="font-kanit text-3xl text-cyber-yellow">🏆 ประวัติการล่าฝุ่น</h2>
+                    <button onclick="storage.clearLeaderboard()" class="text-xs px-2 py-1 bg-red-500/50 rounded hover:bg-red-500">ล้างข้อมูล</button>
+                </div>
+                <div class="overflow-y-auto flex-1">
+                    <table class="w-full text-left text-sm">
+                        <thead class="text-cyber-blue sticky top-0 bg-[#0a0a1a]">
+                            <tr><th>อันดับ</th><th>ชื่อ</th><th>ฮีโร่</th><th>ด่าน</th><th>คะแนน</th></tr>
+                        </thead>
+                        <tbody id="leaderboard-body" class="divide-y divide-white/10">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <button onclick="ui.hideModal('modal-leaderboard')" class="mt-6 w-full py-2 bg-white/20 rounded-lg hover:bg-white/30">ปิด</button>
+            </div>
+        </div>
+
+        <!-- Pause Menu -->
+        <div id="modal-pause" class="hidden absolute inset-0 flex items-center justify-center bg-black/80 z-50 pointer-events-auto p-4 backdrop-blur-sm">
+            <div class="glass-panel p-8 max-w-sm w-full text-center">
+                <h2 class="font-kanit text-4xl text-white mb-8">หยุดพัก</h2>
+                <div class="flex flex-col gap-4">
+                    <button onclick="game.resume()" class="py-3 bg-cyber-blue text-black font-bold rounded-lg btn-neon">▶️ เล่นต่อ</button>
+                    <button onclick="game.restartLevel()" class="py-3 bg-white/20 rounded-lg hover:bg-white/30">🔄 เริ่มด่านใหม่</button>
+                    <button onclick="game.quitToMap()" class="py-3 bg-red-500/50 rounded-lg hover:bg-red-500/80">🚪 ออกจากด่าน</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over (Victory / Defeat) -->
+        <div id="screen-gameover" class="hidden absolute inset-0 flex items-center justify-center bg-black/90 z-50 pointer-events-auto p-4">
+            <div class="text-center">
+                <div id="go-icon" class="text-8xl mb-4 floating">🏆</div>
+                <h1 id="go-title" class="font-kanit text-6xl neon-text mb-2">ภารกิจสำเร็จ!</h1>
+                <p id="go-subtitle" class="text-2xl text-cyber-blue mb-8">คุณคือฮีโร่พิทักษ์อากาศ</p>
+                
+                <div class="glass-panel p-6 inline-block text-left mb-8">
+                    <div class="font-chakra text-xl mb-2">Total Score: <span id="go-score" class="text-cyber-yellow font-bold text-2xl">0</span></div>
+                    <div class="text-sm text-gray-300 max-w-md mt-4" id="go-msg">
+                        อย่าลืมตรวจสอบคุณภาพอากาศ สวมหน้ากากที่เหมาะสม ลดกิจกรรมกลางแจ้งเมื่อค่าฝุ่นสูง และดูแลสุขภาพอย่างสม่ำเสมอ
+                    </div>
+                </div>
+                
+                <div class="flex justify-center gap-4">
+                    <button onclick="ui.showScreen('screen-start')" class="px-8 py-3 glass-panel hover:bg-white/10 rounded-lg">กลับหน้าแรก</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+<script>
+/**
+ * HUNTERS 2.5 : Core Engine
+ */
+
+// --- 1. Utility & Globals ---
+const ctx = document.getElementById('game-canvas').getContext('2d');
+let canvasW = window.innerWidth;
+let canvasH = window.innerHeight;
+document.getElementById('game-canvas').width = canvasW;
+document.getElementById('game-canvas').height = canvasH;
+
+window.addEventListener('resize', () => {
+    canvasW = window.innerWidth;
+    canvasH = window.innerHeight;
+    document.getElementById('game-canvas').width = canvasW;
+    document.getElementById('game-canvas').height = canvasH;
+});
+
+const GESTURE = { NONE: 0, OPEN: 1, FIST: 2, POINT: 3 };
+
+// State Management
+const state = {
+    playerName: 'ฮีโร่นิรนาม',
+    hero: 'sky', // sky, zee, bubble
+    unlockedLevel: 1,
+    currentLevel: 1,
+    score: 0,
+    hp: 100,
+    maxHp: 100,
+    time: 0,
+    isPaused: false,
+    isPlaying: false,
+    inputMode: 'mouse', // 'camera' or 'mouse'
+    cameraActive: false,
+    
+    // Skill state
+    skillCD: 0,
+    skillMaxCD: 10,
+    invincible: false,
+    
+    // Tracking
+    cursorX: canvasW / 2,
+    cursorY: canvasH / 2,
+    targetCursorX: canvasW / 2,
+    targetCursorY: canvasH / 2,
+    gesture: GESTURE.NONE,
+    
+    // Entities
+    entities: [],
+    particles: [],
+    
+    // Level specifics
+    levelData: {}
+};
+
+// Hero Stats
+const HEROS = {
+    sky: { name: 'สกาย สายโล่ N95', hp: 150, cd: 10, icon: '🛡️', skill: 'กางโล่ N95 (อมตะ)' },
+    zee: { name: 'ซี จอมลุยโอเมก้า', hp: 100, cd: 15, icon: '⚡', skill: 'ระเบิดวิตามินซี (ล้างจอ)' },
+    bubble: { name: 'บับเบิ้ล บอทพิทักษ์ปอด', hp: 120, cd: 8, icon: '🤖', skill: 'พ่นละออง (ฟื้นฟู HP)' }
+};
+
+// Math Utils
+const lerp = (a, b, t) => a + (b - a) * t;
+const dist = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1);
+const rand = (min, max) => Math.random() * (max - min) + min;
+
+// --- 2. Audio System ---
+const audio = {
+    ctx: null,
+    muted: false,
+    synthVoice: null,
+    
+    init() {
+        if(!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+        }
+        if(this.ctx.state === 'suspended') this.ctx.resume();
+        this.setupTTS();
+    },
+    
+    toggleMute() {
+        this.muted = !this.muted;
+        document.getElementById('btn-mute-start').innerText = this.muted ? '🔇' : '🔊';
+    },
+
+    playTone(freq, type = 'sine', duration = 0.1, vol = 0.1) {
+        if(this.muted || !this.ctx) return;
+        try {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            
+            gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+        } catch(e) {}
+    },
+
+    sfx: {
+        click() { audio.playTone(600, 'sine', 0.1); },
+        start() { audio.playTone(440, 'square', 0.1); setTimeout(()=>audio.playTone(660, 'square', 0.3), 100); },
+        shoot() { audio.playTone(800, 'sawtooth', 0.1, 0.05); },
+        hit() { audio.playTone(150, 'square', 0.2, 0.2); },
+        damage() { audio.playTone(100, 'sawtooth', 0.3, 0.3); },
+        success() { audio.playTone(880, 'sine', 0.1); setTimeout(()=>audio.playTone(1100, 'sine', 0.3), 100); },
+        error() { audio.playTone(200, 'square', 0.3, 0.2); },
+        skill() { audio.playTone(400, 'sine', 0.5, 0.2); setTimeout(()=>audio.playTone(800, 'sine', 0.5), 100); }
+    },
+
+    setupTTS() {
+        if('speechSynthesis' in window) {
+            let voices = window.speechSynthesis.getVoices();
+            window.speechSynthesis.onvoiceschanged = () => { voices = window.speechSynthesis.getVoices(); };
+        }
+    },
+
+    speak(text) {
+        if(this.muted || !('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'th-TH';
+        utter.rate = 1.1;
+        window.speechSynthesis.speak(utter);
+    }
+};
+
+// --- 3. Storage System ---
+const storage = {
+    key: 'hunters25_data',
+    load() {
+        try {
+            const data = localStorage.getItem(this.key);
+            if(data) {
+                const parsed = JSON.parse(data);
+                state.playerName = parsed.name || 'ฮีโร่นิรนาม';
+                state.unlockedLevel = parsed.unlocked || 1;
+                document.getElementById('input-name').value = state.playerName;
+            }
+        } catch(e) { console.warn("Storage load error"); }
+    },
+    saveRecord(score, stars) {
+        try {
+            let records = this.getLeaderboard();
+            records.push({
+                name: state.playerName,
+                hero: HEROS[state.hero].name,
+                level: state.currentLevel,
+                score: score,
+                stars: stars,
+                date: new Date().toLocaleDateString('th-TH')
+            });
+            records.sort((a,b) => b.score - a.score);
+            if(records.length > 20) records = records.slice(0, 20);
+            
+            // update unlock
+            if(stars > 0 && state.currentLevel === state.unlockedLevel && state.currentLevel < 5) {
+                state.unlockedLevel++;
+            }
+            
+            localStorage.setItem(this.key, JSON.stringify({
+                name: state.playerName,
+                unlocked: state.unlockedLevel,
+                history: records
+            }));
+        } catch(e) {}
+    },
+    getLeaderboard() {
+        try {
+            const data = localStorage.getItem(this.key);
+            if(data) {
+                return JSON.parse(data).history || [];
+            }
+        } catch(e) {}
+        return [];
+    },
+    clearLeaderboard() {
+        localStorage.removeItem(this.key);
+        state.unlockedLevel = 1;
+        ui.populateLeaderboard();
+        ui.hideModal('modal-leaderboard');
+    }
+};
+
+// --- 4. Camera & MediaPipe System ---
+const vision = {
+    videoElement: document.getElementById('webcam'),
+    hands: null,
+    camera: null,
+    
+    async init() {
+        try {
+            // Attempt to get camera stream
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { width: 640, height: 480, facingMode: 'user' } 
+            });
+            this.videoElement.srcObject = stream;
+            state.cameraActive = true;
+            state.inputMode = 'camera';
+            
+            // Init MediaPipe
+            this.hands = new Hands({locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+            }});
+            this.hands.setOptions({
+                maxNumHands: 1,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.6,
+                minTrackingConfidence: 0.6
+            });
+            this.hands.onResults(this.onResults);
+
+            this.camera = new Camera(this.videoElement, {
+                onFrame: async () => {
+                    if(state.isPlaying && !state.isPaused) {
+                        await this.hands.send({image: this.videoElement});
+                    }
+                },
+                width: 640,
+                height: 480
+            });
+            this.camera.start();
+            
+        } catch(err) {
+            console.warn("Camera failed, fallback to mouse mode.", err);
+            state.cameraActive = false;
+            state.inputMode = 'mouse';
+        }
+        
+        // Setup Mouse Fallback
+        window.addEventListener('mousemove', (e) => {
+            if(state.inputMode === 'mouse') {
+                state.targetCursorX = e.clientX;
+                state.targetCursorY = e.clientY;
+            }
+        });
+        window.addEventListener('touchmove', (e) => {
+            if(state.inputMode === 'mouse' && e.touches.length > 0) {
+                state.targetCursorX = e.touches[0].clientX;
+                state.targetCursorY = e.touches[0].clientY;
+            }
+        });
+        window.addEventListener('mousedown', () => { if(state.inputMode === 'mouse') state.gesture = GESTURE.FIST; });
+        window.addEventListener('mouseup', () => { if(state.inputMode === 'mouse') state.gesture = GESTURE.OPEN; });
+        window.addEventListener('touchstart', () => { if(state.inputMode === 'mouse') state.gesture = GESTURE.FIST; });
+        window.addEventListener('touchend', () => { if(state.inputMode === 'mouse') state.gesture = GESTURE.OPEN; });
+        
+        // Init complete
+        document.getElementById('loading-text').innerText = state.cameraActive ? "กล้องพร้อมใช้งาน" : "โหมดสำรอง (ใช้เมาส์/สัมผัส)";
+        document.getElementById('btn-init-start').classList.remove('hidden');
+    },
+
+    onResults(results) {
+        if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+            state.gesture = GESTURE.NONE;
+            return;
+        }
+
+        const landmarks = results.multiHandLandmarks[0];
+        
+        // Map normalized coordinates to canvas (Mirrored horizontally)
+        const rawX = (1 - landmarks[9].x) * canvasW; // Use middle finger base as center
+        const rawY = landmarks[9].y * canvasH;
+        
+        state.targetCursorX = rawX;
+        state.targetCursorY = rawY;
+
+        // Simple Gesture Detection
+        const isIndexUp = landmarks[8].y < landmarks[6].y;
+        const isMiddleUp = landmarks[12].y < landmarks[10].y;
+        const isRingUp = landmarks[16].y < landmarks[14].y;
+        const isPinkyUp = landmarks[20].y < landmarks[18].y;
+
+        const fingersUp = [isIndexUp, isMiddleUp, isRingUp, isPinkyUp].filter(Boolean).length;
+
+        if (fingersUp === 0) {
+            state.gesture = GESTURE.FIST;
+        } else if (isIndexUp && !isMiddleUp && !isRingUp && !isPinkyUp) {
+            state.gesture = GESTURE.POINT;
+            // When pointing, move cursor to index tip
+            state.targetCursorX = (1 - landmarks[8].x) * canvasW;
+            state.targetCursorY = landmarks[8].y * canvasH;
+        } else if (fingersUp >= 3) {
+            state.gesture = GESTURE.OPEN;
+        } else {
+            state.gesture = GESTURE.NONE;
+        }
+    }
+};
+
+// --- 5. UI System ---
+const ui = {
+    screens: ['screen-loading', 'screen-start', 'screen-hero', 'screen-map', 'hud', 'screen-result', 'screen-gameover'],
+    
+    showScreen(id) {
+        this.screens.forEach(s => document.getElementById(s).classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    },
+    
+    showModal(id) { document.getElementById(id).classList.remove('hidden'); audio.sfx.click(); },
+    hideModal(id) { document.getElementById(id).classList.add('hidden'); audio.sfx.click(); },
+
+    selectHero(heroId) {
+        audio.sfx.click();
+        document.querySelectorAll('.hero-card').forEach(el => el.classList.remove('border-cyber-blue', 'bg-white/10'));
+        event.currentTarget.classList.add('border-cyber-blue', 'bg-white/10');
+        state.hero = heroId;
+        audio.speak(HEROS[heroId].name);
+    },
+
+    confirmHero() {
+        const nameInput = document.getElementById('input-name').value.trim();
+        state.playerName = nameInput || 'ฮีโร่นิรนาม';
+        audio.sfx.click();
+        this.buildMap();
+        this.showScreen('screen-map');
+    },
+
+    buildMap() {
+        const container = document.getElementById('level-container');
+        container.innerHTML = '';
+        
+        const levels = [
+            { id: 1, name: 'ฝุ่นเริ่มคุกคาม', desc: 'เลือกหน้ากากป้องกัน', color: 'bg-green-500' },
+            { id: 2, name: 'ปีศาจฝุ่นจิ๋ว', desc: 'ยิงกำจัดมอนสเตอร์', color: 'bg-yellow-500' },
+            { id: 3, name: 'ราชาฝุ่นจิ๋ว', desc: 'ปัดทำลายบอส', color: 'bg-red-500' },
+            { id: 4, name: 'สร้างภูมิคุ้มกัน', desc: 'ฝึกหายใจลึกๆ', color: 'bg-blue-500' },
+            { id: 5, name: 'อาหารมีประโยชน์', desc: 'ลากลงตะกร้า', color: 'bg-purple-500' }
+        ];
+
+        levels.forEach(l => {
+            const isUnlocked = l.id <= state.unlockedLevel;
+            const btn = document.createElement('div');
+            btn.className = `glass-panel p-4 w-40 text-center transition ${isUnlocked ? 'cursor-pointer hover:scale-105 border-cyber-blue/50' : 'opacity-50 grayscale'}`;
+            
+            btn.innerHTML = `
+                <div class="text-3xl mb-2">${isUnlocked ? '▶️' : '🔒'}</div>
+                <div class="font-kanit font-bold ${isUnlocked ? 'text-white' : 'text-gray-400'}">ด่าน ${l.id}</div>
+                <div class="text-xs mt-1 text-gray-300">${l.name}</div>
+                <div class="w-full h-1 mt-2 rounded ${l.color} ${isUnlocked ? '' : 'opacity-20'}"></div>
+            `;
+            
+            if(isUnlocked) {
+                btn.onclick = () => {
+                    audio.sfx.start();
+                    game.startLevel(l.id);
+                };
+            }
+            container.appendChild(btn);
+        });
+    },
+
+    showInstruction(text) {
+        const el = document.getElementById('hud-instruction');
+        el.innerText = text;
+        el.classList.remove('opacity-0');
+        setTimeout(() => el.classList.add('opacity-0'), 3000);
+        audio.speak(text);
+    },
+
+    updateHUD() {
+        document.getElementById('hud-score').innerText = state.score;
+        document.getElementById('hud-hp-text').innerText = Math.floor(state.hp);
+        document.getElementById('hud-hp-bar').style.width = `${Math.max(0, (state.hp/state.maxHp)*100)}%`;
+        
+        let color = 'bg-cyber-green';
+        if(state.hp < state.maxHp * 0.6) color = 'bg-yellow-500';
+        if(state.hp < state.maxHp * 0.3) color = 'bg-red-500';
+        document.getElementById('hud-hp-bar').className = `h-full transition-all duration-300 w-full ${color}`;
+        
+        document.getElementById('hud-time').innerText = Math.ceil(state.time);
+        
+        let gIcon = '🖐️';
+        if(state.gesture === GESTURE.FIST) gIcon = '✊';
+        if(state.gesture === GESTURE.POINT) gIcon = '👆';
+        document.getElementById('hud-gesture').innerText = gIcon;
+
+        // Skill button
+        const btnSkill = document.getElementById('btn-skill');
+        const cdOverlay = document.getElementById('skill-cooldown');
+        if(state.skillCD > 0) {
+            btnSkill.classList.add('opacity-50', 'grayscale');
+            cdOverlay.classList.remove('hidden');
+            cdOverlay.innerText = Math.ceil(state.skillCD);
+        } else {
+            btnSkill.classList.remove('opacity-50', 'grayscale');
+            cdOverlay.classList.add('hidden');
+        }
+    },
+
+    showResult(won, eduText) {
+        state.isPlaying = false;
+        this.showScreen('screen-result');
+        
+        document.getElementById('result-title').innerText = won ? 'ด่านสำเร็จ!' : 'ด่านล้มเหลว';
+        document.getElementById('result-title').className = won ? 'font-kanit text-4xl neon-text mb-2' : 'font-kanit text-4xl neon-text-red mb-2';
+        
+        let stars = 0;
+        if(won) {
+            stars = 1;
+            if(state.hp > state.maxHp * 0.5) stars = 2;
+            if(state.hp > state.maxHp * 0.8) stars = 3;
+            audio.sfx.success();
+        } else {
+            audio.sfx.error();
+        }
+        
+        let starHtml = '';
+        for(let i=0; i<3; i++) starHtml += i < stars ? '⭐' : '<span class="opacity-20 grayscale">⭐</span>';
+        document.getElementById('result-stars').innerHTML = starHtml;
+        
+        document.getElementById('result-score').innerText = state.score;
+        document.getElementById('result-hp').innerText = Math.floor(state.hp);
+        document.getElementById('result-edu-text').innerText = eduText;
+        
+        const btnNext = document.getElementById('btn-next-level');
+        if(won && state.currentLevel < 5) {
+            btnNext.style.display = 'block';
+        } else {
+            btnNext.style.display = 'none';
+        }
+        
+        storage.saveRecord(state.score, stars);
+        audio.speak(won ? "ยอดเยี่ยมมาก " + eduText : "ไม่เป็นไร ลองใหม่นะ " + eduText);
+
+        // Check overall victory
+        if(won && state.currentLevel === 5) {
+            setTimeout(() => {
+                this.showScreen('screen-gameover');
+                document.getElementById('go-score').innerText = state.score;
+                audio.playTone(400, 'sine', 0.2); setTimeout(()=>audio.playTone(600, 'sine', 0.2), 200); setTimeout(()=>audio.playTone(800, 'sine', 0.4), 400);
+                audio.speak("ภารกิจสำเร็จ คุณคือฮีโร่พิทักษ์อากาศ");
+            }, 5000);
+        }
+    },
+
+    populateLeaderboard() {
+        const tbody = document.getElementById('leaderboard-body');
+        tbody.innerHTML = '';
+        const records = storage.getLeaderboard();
+        if(records.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-gray-400">ยังไม่มีประวัติการเล่น</td></tr>';
+            return;
+        }
+        records.forEach((r, i) => {
+            tbody.innerHTML += `
+                <tr class="hover:bg-white/5">
+                    <td class="py-2 px-1 text-cyber-yellow">${i+1}</td>
+                    <td class="py-2 px-1">${r.name}</td>
+                    <td class="py-2 px-1 text-xs">${r.hero}</td>
+                    <td class="py-2 px-1">${r.level}</td>
+                    <td class="py-2 px-1 font-chakra">${r.score}</td>
+                </tr>
+            `;
+        });
+    },
+
+    showLeaderboard() {
+        this.populateLeaderboard();
+        this.showModal('modal-leaderboard');
+    }
+};
+
+
+// --- 6. Game Rendering & Effects ---
+const vfx = {
+    addParticle(x, y, color, size, type = 'normal') {
+        state.particles.push({
+            x, y, color, size, type,
+            vx: rand(-2, 2), vy: rand(-2, 2),
+            life: 1, maxLife: rand(0.5, 1.5)
+        });
+    },
+    addFloatingText(x, y, text, color) {
+        state.particles.push({
+            x, y, color, text, size: 24, type: 'text',
+            vx: 0, vy: -1, life: 1, maxLife: 1
+        });
+    },
+    screenShake: 0,
+    shake() { this.screenShake = 10; },
+    damageFlash: 0,
+    flash() { this.damageFlash = 1; }
+};
+
+// --- 7. Game Logic ---
+const game = {
+    lastTime: 0,
+    animFrame: null,
+
+    start() {
+        storage.load();
+        ui.buildMap();
+        document.getElementById('btn-init-start').onclick = () => {
+            audio.init();
+            audio.sfx.click();
+            audio.speak("ยินดีต้อนรับเข้าสู่ เกม Hunters 2.5 เกมหน่วยล่าท้าฝุ่น");
+            ui.showScreen('screen-start');
+        };
+        requestAnimationFrame((t) => this.loop(t));
+    },
+
+    startLevel(levelNum) {
+        state.currentLevel = levelNum;
+        const hero = HEROS[state.hero];
+        state.maxHp = hero.hp;
+        state.hp = hero.hp;
+        state.score = 0;
+        state.skillCD = 0;
+        state.skillMaxCD = hero.cd;
+        state.entities = [];
+        state.particles = [];
+        state.isPaused = false;
+        state.isPlaying = true;
+        state.invincible = false;
+
+        document.getElementById('hud-hero-name').innerText = hero.name;
+        document.getElementById('skill-icon').innerText = hero.icon;
+        document.getElementById('hud-level-name').innerText = `ด่าน ${levelNum}`;
+        document.getElementById('hud-input-mode').innerText = state.inputMode === 'camera' ? '📷 โหมด AR' : '🖱️ โหมดเมาส์';
+
+        ui.showScreen('hud');
+        
+        // Level Specific Setup
+        state.levelData = { timer: 0 };
+        
+        switch(levelNum) {
+            case 1:
+                state.time = 20;
+                ui.showInstruction("แบมือ ✋ เพื่อหยิบหน้ากาก N95");
+                state.levelData.aqi = 'ดี'; state.levelData.fog = 'rgba(0,255,100,0.1)';
+                this.spawnLevel1Items();
+                break;
+            case 2:
+                state.time = 30;
+                ui.showInstruction("ชี้นิ้ว 👆 เพื่อยิงปีศาจฝุ่น");
+                state.levelData.aqi = 'ปานกลาง'; state.levelData.fog = 'rgba(255,200,0,0.2)';
+                state.levelData.spawnTimer = 0;
+                state.levelData.lastShoot = 0;
+                break;
+            case 3:
+                state.time = 45;
+                ui.showInstruction("แบมือ ✋ แล้วปัดซ้ายขวา โจมตีบอส!");
+                state.levelData.aqi = 'มีผลกระทบ'; state.levelData.fog = 'rgba(255,0,0,0.3)';
+                state.entities.push({ id: 'boss', type: 'boss', x: canvasW/2, y: canvasH*0.3, hp: 30, maxHp: 30, size: 80, vx: 150, emoji: '🌑', attackTimer: 0 });
+                state.levelData.lastHandX = state.cursorX;
+                break;
+            case 4:
+                state.time = 20;
+                ui.showInstruction("กางแขน แบมือค้างไว้ 5 วินาที");
+                state.levelData.aqi = 'ดีมาก'; state.levelData.fog = 'rgba(0,100,255,0.1)';
+                state.levelData.breathProgress = 0;
+                document.getElementById('hud-progress-container').classList.remove('hidden');
+                break;
+            case 5:
+                state.time = 30;
+                ui.showInstruction("กำมือ ✊ ลากอาหารดีๆ ลงตะกร้า 🧺");
+                state.levelData.aqi = 'ดี'; state.levelData.fog = 'rgba(0,255,100,0.1)';
+                state.levelData.spawnTimer = 0;
+                state.levelData.draggedItem = null;
+                state.levelData.basket = { x: canvasW/2, y: canvasH - 80, r: 60 };
+                break;
+        }
+
+        document.getElementById('hud-aqi').innerText = state.levelData.aqi;
+    },
+
+    nextLevel() {
+        if(state.currentLevel < 5) {
+            this.startLevel(state.currentLevel + 1);
+        }
+    },
+
+    restartLevel() {
+        ui.hideModal('modal-pause');
+        this.startLevel(state.currentLevel);
+    },
+
+    quitToMap() {
+        ui.hideModal('modal-pause');
+        state.isPlaying = false;
+        ui.showScreen('screen-map');
+    },
+
+    pause() {
+        if(!state.isPlaying) return;
+        state.isPaused = true;
+        ui.showModal('modal-pause');
+    },
+
+    resume() {
+        state.isPaused = false;
+        ui.hideModal('modal-pause');
+    },
+
+    useSkill() {
+        if(state.skillCD > 0 || state.isPaused || !state.isPlaying) return;
+        
+        audio.sfx.skill();
+        state.skillCD = state.skillMaxCD;
+        vfx.addFloatingText(canvasW/2, canvasH/2, "SKILL ACTIVATED!", "#00f3ff");
+
+        switch(state.hero) {
+            case 'sky':
+                state.invincible = true;
+                setTimeout(() => state.invincible = false, 5000);
+                break;
+            case 'zee':
+                // Clear enemies
+                let hits = 0;
+                state.entities = state.entities.filter(e => {
+                    if(e.type === 'enemy') { hits++; vfx.addParticle(e.x, e.y, '#ff0000', 10); return false; }
+                    return true;
+                });
+                state.score += hits * 10;
+                vfx.flash();
+                break;
+            case 'bubble':
+                state.hp = Math.min(state.maxHp, state.hp + 50);
+                vfx.addParticle(canvasW/2, canvasH/2, '#00ff66', 20);
+                break;
+        }
+    },
+
+    spawnLevel1Items() {
+        const items = [
+            { type: 'n95', emoji: '😷', good: true },
+            { type: 'cloth', emoji: '🧣', good: false },
+            { type: 'toy', emoji: '🧸', good: false },
+            { type: 'glasses', emoji: '🕶️', good: false }
+        ];
+        items.forEach((item, i) => {
+            state.entities.push({
+                ...item,
+                x: canvasW * 0.2 + (i * (canvasW * 0.2)),
+                y: canvasH * rand(0.3, 0.7),
+                size: 40,
+                vy: Math.sin(i) * 20
+            });
+        });
+    },
+
+    loop(timestamp) {
+        let dt = (timestamp - this.lastTime) / 1000;
+        this.lastTime = timestamp;
+        if(dt > 0.1) dt = 0.016; // clamp
+
+        this.update(dt);
+        this.draw();
+        this.animFrame = requestAnimationFrame((t) => this.loop(t));
+    },
+
+    update(dt) {
+        // Smooth Cursor
+        if(state.inputMode === 'mouse' && state.gesture === GESTURE.NONE) {
+            // Keep gesture from mouse handlers if set, otherwise reset to OPEN if moving (simplification)
+            if(!('touches' in window)) state.gesture = GESTURE.OPEN; 
+        }
+        
+        state.cursorX = lerp(state.cursorX, state.targetCursorX, 15 * dt);
+        state.cursorY = lerp(state.cursorY, state.targetCursorY, 15 * dt);
+
+        if(!state.isPlaying || state.isPaused) return;
+
+        // General Updates
+        state.time -= dt;
+        if(state.time <= 0) {
+            state.time = 0;
+            this.handleLevelEnd();
+            return;
+        }
+        if(state.hp <= 0) {
+            state.hp = 0;
+            this.handleLevelEnd(false);
+            return;
+        }
+
+        if(state.skillCD > 0) state.skillCD -= dt;
+
+        // Level Specific Logic
+        switch(state.currentLevel) {
+            case 1: this.updateL1(dt); break;
+            case 2: this.updateL2(dt); break;
+            case 3: this.updateL3(dt); break;
+            case 4: this.updateL4(dt); break;
+            case 5: this.updateL5(dt); break;
+        }
+
+        // Update Particles
+        state.particles.forEach(p => {
+            p.x += p.vx; p.y += p.vy;
+            p.life -= dt;
+        });
+        state.particles = state.particles.filter(p => p.life > 0);
+
+        ui.updateHUD();
+    },
+
+    updateL1(dt) {
+        state.entities.forEach(e => {
+            e.y += e.vy * dt;
+            if(e.y < 100 || e.y > canvasH - 100) e.vy *= -1;
+            
+            // Check pickup
+            if(state.gesture === GESTURE.OPEN && dist(state.cursorX, state.cursorY, e.x, e.y) < e.size) {
+                if(e.good) {
+                    state.score += 200;
+                    vfx.addFloatingText(e.x, e.y, "+200", "#00ff66");
+                    this.handleLevelEnd(true, "ยอดเยี่ยม! หน้ากาก N95 ช่วยกรองฝุ่น PM 2.5 ได้ดีที่สุด");
+                } else {
+                    state.time -= 2;
+                    audio.sfx.error();
+                    vfx.addFloatingText(e.x, e.y, "อันนี้ไม่กันฝุ่น!", "#ff0000");
+                    e.y -= 100; // Bounce away
+                }
+            }
+        });
+    },
+
+    updateL2(dt) {
+        state.levelData.spawnTimer -= dt;
+        if(state.levelData.spawnTimer <= 0) {
+            state.levelData.spawnTimer = rand(0.5, 1.5);
+            const isRed = Math.random() > 0.7;
+            state.entities.push({
+                id: Math.random(), type: 'enemy',
+                x: rand(50, canvasW-50), y: -50,
+                size: 30, vy: rand(100, 200),
+                emoji: isRed ? '🔴' : '🟡',
+                pts: isRed ? 30 : 10
+            });
+        }
+
+        // Shooting
+        state.levelData.lastShoot -= dt;
+        if(state.gesture === GESTURE.POINT && state.levelData.lastShoot <= 0) {
+            state.levelData.lastShoot = 0.25;
+            audio.sfx.shoot();
+            // Raycast check
+            for(let i = state.entities.length-1; i>=0; i--) {
+                const e = state.entities[i];
+                if(dist(state.cursorX, state.cursorY, e.x, e.y) < e.size * 2) {
+                    state.score += e.pts;
+                    vfx.addParticle(e.x, e.y, e.pts===30?'#ff0000':'#ffff00', 5);
+                    vfx.addFloatingText(e.x, e.y, `+${e.pts}`, "#00f3ff");
+                    state.entities.splice(i, 1);
+                    break; // hit one per shot
+                }
+            }
+        }
+
+        // Move enemies
+        for(let i = state.entities.length-1; i>=0; i--) {
+            const e = state.entities[i];
+            e.y += e.vy * dt;
+            if(e.y > canvasH) {
+                if(!state.invincible) {
+                    state.hp -= 15;
+                    vfx.shake(); vfx.flash(); audio.sfx.damage();
+                }
+                state.entities.splice(i, 1);
+            }
+        }
+    },
+
+    updateL3(dt) {
+        const boss = state.entities.find(e => e.type === 'boss');
+        if(!boss) return;
+
+        // Boss move
+        boss.x += boss.vx * dt;
+        if(boss.x < boss.size || boss.x > canvasW - boss.size) boss.vx *= -1;
+        
+        // Boss Attack
+        boss.attackTimer -= dt;
+        if(boss.attackTimer <= 0) {
+            boss.attackTimer = 2;
+            state.entities.push({
+                type: 'proj', x: boss.x, y: boss.y, size: 20,
+                vx: (state.cursorX - boss.x) * 0.5, vy: (state.cursorY - boss.y) * 0.5 + 100, emoji: '💨'
+            });
+        }
+
+        // Move projectiles
+        for(let i = state.entities.length-1; i>=0; i--) {
+            const p = state.entities[i];
+            if(p.type === 'proj') {
+                p.x += p.vx * dt; p.y += p.vy * dt;
+                if(dist(state.cursorX, state.cursorY, p.x, p.y) < p.size + 20 && !state.invincible) {
+                    state.hp -= 30; vfx.shake(); vfx.flash(); audio.sfx.damage();
+                    state.entities.splice(i, 1);
+                }
+                else if(p.y > canvasH) state.entities.splice(i, 1);
+            }
+        }
+
+        // Player Slap Attack
+        const velX = (state.cursorX - state.levelData.lastHandX) / dt;
+        state.levelData.lastHandX = state.cursorX;
+
+        if(state.gesture === GESTURE.OPEN && Math.abs(velX) > 1500) { // Fast swipe
+            if(dist(state.cursorX, state.cursorY, boss.x, boss.y) < boss.size * 2) {
+                boss.hp -= 3; // base 3 dmg
+                audio.sfx.hit();
+                vfx.addParticle(boss.x, boss.y, '#ffffff', 5);
+                vfx.shake();
+                if(boss.hp <= 0) {
+                    state.score += 1000;
+                    state.entities = [];
+                    this.handleLevelEnd(true, "สุดยอด! ปราบบอสราชาฝุ่นได้แล้ว โลกกลับมาสดใสอีกครั้ง");
+                }
+            }
+        }
+    },
+
+    updateL4(dt) {
+        const pRing = document.getElementById('hud-progress-ring');
+        if(state.gesture === GESTURE.OPEN) {
+            state.levelData.breathProgress += dt / 5; // 5 seconds to fill
+            if(state.levelData.breathProgress >= 1) {
+                state.score += 300;
+                document.getElementById('hud-progress-container').classList.add('hidden');
+                this.handleLevelEnd(true, "ดีมาก! ปอดของคุณแข็งแรงและพร้อมรับมือกับฝุ่นแล้ว (การฝึกนี้เป็นเพียงการจำลอง)");
+            }
+        }
+        
+        const offset = 377 - (377 * Math.min(1, Math.max(0, state.levelData.breathProgress)));
+        pRing.style.strokeDashoffset = offset;
+    },
+
+    updateL5(dt) {
+        state.levelData.spawnTimer -= dt;
+        if(state.levelData.spawnTimer <= 0) {
+            state.levelData.spawnTimer = rand(1, 2);
+            const isGood = Math.random() > 0.4;
+            const foods = isGood ? ['🍎','🥦','🍊','🐟'] : ['🥤','🍬','🍟'];
+            state.entities.push({
+                id: Math.random(), type: 'food', good: isGood,
+                x: rand(50, canvasW-50), y: -50, size: 30, vy: 100,
+                emoji: foods[Math.floor(Math.random()*foods.length)]
+            });
+        }
+
+        let isHoveringItem = false;
+
+        for(let i = state.entities.length-1; i>=0; i--) {
+            const e = state.entities[i];
+            
+            if(state.levelData.draggedItem === e.id) {
+                e.x = lerp(e.x, state.cursorX, 10*dt);
+                e.y = lerp(e.y, state.cursorY, 10*dt);
+                
+                // Drop logic
+                if(state.gesture === GESTURE.OPEN) {
+                    state.levelData.draggedItem = null;
+                    const basket = state.levelData.basket;
+                    if(dist(e.x, e.y, basket.x, basket.y) < basket.r) {
+                        if(e.good) {
+                            state.score += 100;
+                            vfx.addFloatingText(e.x, e.y, "+100", "#00ff66");
+                            audio.sfx.success();
+                        } else {
+                            state.score = Math.max(0, state.score - 30);
+                            vfx.addFloatingText(e.x, e.y, "-30 อันนี้ควรทานน้อยๆ", "#ff0000");
+                            audio.sfx.error();
+                        }
+                        state.entities.splice(i, 1);
+                    }
+                }
+            } else {
+                e.y += e.vy * dt;
+                if(e.y > canvasH) state.entities.splice(i, 1);
+                
+                // Grab logic
+                if(!state.levelData.draggedItem && state.gesture === GESTURE.FIST && dist(state.cursorX, state.cursorY, e.x, e.y) < e.size*1.5) {
+                    state.levelData.draggedItem = e.id;
+                }
+            }
+        }
+    },
+
+    handleLevelEnd(forceWin = false, eduTextOverride = null) {
+        state.isPlaying = false;
+        document.getElementById('hud-progress-container').classList.add('hidden'); // cleanup L4
+        
+        const isWin = forceWin || (state.hp > 0 && state.time === 0); // Survive mode win condition
+        
+        let eduText = eduTextOverride;
+        if(!eduText) {
+            const edus = [
+                "หน้ากาก N95 ที่สวมกระชับใบหน้าสามารถช่วยลดการสูดฝุ่นละอองขนาดเล็กได้",
+                "ฝุ่น PM 2.5 มีขนาดเล็กมาก จึงสามารถเข้าสู่ระบบทางเดินหายใจและกระแสเลือดได้",
+                "เมื่อค่าฝุ่นสูง ควรลดกิจกรรมกลางแจ้งและติดตามประกาศคุณภาพอากาศผ่านแอป Air4Thai",
+                "การพักผ่อน ออกกำลังกายอย่างเหมาะสม และดูแลสุขภาพ ช่วยให้ร่างกายแข็งแรง",
+                "ควรรับประทานอาหารให้ครบ 5 หมู่ ดื่มน้ำสะอาด และเลือกผักผลไม้หลากหลายสี"
+            ];
+            eduText = edus[state.currentLevel - 1];
+        }
+
+        ui.showResult(isWin, eduText);
+    },
+
+    draw() {
+        // Clear & Draw Camera (if active)
+        ctx.clearRect(0, 0, canvasW, canvasH);
+        
+        ctx.save();
+        
+        // Screen Shake
+        if(vfx.screenShake > 0) {
+            ctx.translate(rand(-5,5), rand(-5,5));
+            vfx.screenShake--;
+        }
+
+        if(state.cameraActive && vision.videoElement.readyState >= 2) {
+            ctx.save();
+            ctx.scale(-1, 1);
+            ctx.drawImage(vision.videoElement, -canvasW, 0, canvasW, canvasH);
+            ctx.restore();
+        } else {
+            // Dark grid background fallback
+            ctx.fillStyle = '#050510'; ctx.fillRect(0, 0, canvasW, canvasH);
+            ctx.strokeStyle = '#1a1a3a'; ctx.lineWidth = 1;
+            for(let i=0; i<canvasW; i+=50) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvasH); ctx.stroke(); }
+            for(let i=0; i<canvasH; i+=50) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvasW,i); ctx.stroke(); }
+        }
+
+        // Fog / Zone Color
+        if(state.levelData && state.levelData.fog) {
+            ctx.fillStyle = state.levelData.fog;
+            ctx.fillRect(0, 0, canvasW, canvasH);
+        }
+
+        // Damage Flash
+        if(vfx.damageFlash > 0) {
+            ctx.fillStyle = `rgba(255, 0, 0, ${vfx.damageFlash * 0.5})`;
+            ctx.fillRect(0, 0, canvasW, canvasH);
+            vfx.damageFlash -= 0.1;
+        }
+
+        // Invincible aura
+        if(state.invincible) {
+            ctx.fillStyle = 'rgba(0, 255, 100, 0.1)';
+            ctx.fillRect(0, 0, canvasW, canvasH);
+            ctx.strokeStyle = '#00ff66'; ctx.lineWidth = 5;
+            ctx.strokeRect(10, 10, canvasW-20, canvasH-20);
+        }
+
+        // Draw Level Specifics
+        if(state.currentLevel === 5 && state.levelData.basket) {
+            const b = state.levelData.basket;
+            ctx.font = '60px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('🧺', b.x, b.y);
+        }
+
+        // Draw Entities
+        state.entities.forEach(e => {
+            if(e.type === 'boss') {
+                ctx.font = `${e.size}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(e.emoji, e.x, e.y);
+                // Boss HP
+                ctx.fillStyle = 'red'; ctx.fillRect(e.x - 40, e.y - e.size/2 - 20, 80, 10);
+                ctx.fillStyle = 'green'; ctx.fillRect(e.x - 40, e.y - e.size/2 - 20, 80 * (e.hp/e.maxHp), 10);
+            } else {
+                ctx.font = `${e.size}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(e.emoji, e.x, e.y);
+            }
+        });
+
+        // Draw Particles
+        state.particles.forEach(p => {
+            if(p.type === 'text') {
+                ctx.font = `bold ${p.size}px Kanit`;
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life / p.maxLife;
+                ctx.textAlign = 'center'; ctx.fillText(p.text, p.x, p.y);
+                ctx.globalAlpha = 1.0;
+            } else {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size * (p.life/p.maxLife), 0, Math.PI*2);
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life / p.maxLife;
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        });
+
+        // Draw Cursor
+        if(state.isPlaying && !state.isPaused) {
+            ctx.font = '40px Arial';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            let cursorEmoji = '🖐️';
+            if(state.gesture === GESTURE.FIST) cursorEmoji = '✊';
+            if(state.gesture === GESTURE.POINT) cursorEmoji = '🎯'; // crosshair for shooting
+            
+            // Glow
+            ctx.shadowBlur = 20; ctx.shadowColor = '#00f3ff';
+            ctx.fillText(cursorEmoji, state.cursorX, state.cursorY);
+            ctx.shadowBlur = 0;
+            
+            // Debug line for boss slap
+            if(state.currentLevel === 3 && state.gesture === GESTURE.OPEN) {
+                ctx.beginPath();
+                ctx.moveTo(state.levelData.lastHandX, state.cursorY);
+                ctx.lineTo(state.cursorX, state.cursorY);
+                ctx.strokeStyle = 'rgba(0, 243, 255, 0.5)';
+                ctx.lineWidth = 5;
+                ctx.stroke();
+            }
+        }
+
+        ctx.restore();
+    }
+};
+
+// --- Boot Sequence ---
+window.onload = () => {
+    // Initial check for setup
+    setTimeout(async () => {
+        await vision.init();
+    }, 1000); // Give loading screen a moment to show
+    
+    game.start();
+};
+
+</script>
+</body>
+</html>
