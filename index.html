@@ -54,6 +54,14 @@
 
         .hidden { display: none !important; opacity: 0; pointer-events: none; }
 
+        /* Background Layers */
+        .bg-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
         /* Glassmorphism Panel */
         .glass-panel {
             background: rgba(255, 255, 255, 0.05);
@@ -66,6 +74,8 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
             max-width: 90%;
             width: 500px;
+            z-index: 1; /* Stay above bg-layer */
+            position: relative;
         }
 
         /* Buttons */
@@ -82,6 +92,8 @@
             margin: 10px;
             text-transform: uppercase;
             font-weight: bold;
+            position: relative;
+            z-index: 1;
         }
         .btn:hover:not(:disabled) { background: var(--color-primary); color: var(--color-bg-dark); }
         .btn:active:not(:disabled) { transform: scale(0.95); }
@@ -97,7 +109,11 @@
         .pulse { animation: pulseAnim 2s infinite; }
         @keyframes pulseAnim { 0% { transform: scale(1); box-shadow: 0 0 15px var(--color-primary); } 50% { transform: scale(1.05); box-shadow: 0 0 30px var(--color-primary); } 100% { transform: scale(1); box-shadow: 0 0 15px var(--color-primary); } }
         
-        .no-motion { animation: none !important; transition: none !important; }
+        /* Background Breath Animation */
+        .bg-anim-breath { animation: breathBg 5s ease-in-out infinite alternate; }
+        @keyframes breathBg { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
+
+        .no-motion { animation: none !important; transition: none !important; transform: none !important; }
 
         /* Inputs */
         input[type="text"] {
@@ -178,9 +194,16 @@
         
         /* 4. Accessibility */
         .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+        
+        /* Title text layer specific to start screen */
+        .title-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none; }
+        .title-content > * { pointer-events: auto; }
     </style>
 </head>
 <body>
+
+    <!-- Toast Container -->
+    <div id="toast-container" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:1000; pointer-events:none; display:flex; flex-direction:column; gap:10px;"></div>
 
     <!-- 1. HTML Screens -->
     <!-- Loading Screen -->
@@ -194,16 +217,19 @@
     </div>
 
     <!-- Start Screen -->
-    <div id="screen-start" class="screen hidden">
-        <h1 style="font-size: 4rem; color: var(--color-primary); text-shadow: 0 0 20px var(--color-primary); margin-bottom: 10px;">HUNTERS 2.5</h1>
-        <h2 style="font-size: 2rem; margin-bottom: 20px;">หน่วยล่าท้าฝุ่น</h2>
-        <p style="font-size: 1.2rem; color: #ccc; margin-bottom: 40px;">รวมพลังฮีโร่ ปกป้องปอด พิชิตภัยฝุ่น PM 2.5</p>
-        
-        <button class="btn btn-primary pulse" style="font-size: 1.5rem; padding: 20px 50px;" aria-label="เริ่มภารกิจ" onclick="showScreen('screen-setup')">เริ่มภารกิจ</button>
-        <div style="margin-top: 10px;">
-            <button class="btn" onclick="showScreen('screen-history')">ประวัติ</button>
-            <button class="btn" onclick="showSettingsModal()">ตั้งค่า</button>
-            <button class="btn" onclick="toggleFullscreen()">เต็มจอ</button>
+    <div id="screen-start" class="screen hidden" style="background: transparent;">
+        <div id="start-bg" class="bg-layer"></div>
+        <div class="title-content">
+            <h1 style="font-size: 4rem; color: var(--color-primary); text-shadow: 0 0 20px var(--color-primary); margin-bottom: 10px;">HUNTERS 2.5</h1>
+            <h2 style="font-size: 2rem; margin-bottom: 20px;">หน่วยล่าท้าฝุ่น</h2>
+            <p style="font-size: 1.2rem; color: #ccc; margin-bottom: 40px; text-shadow: 1px 1px 4px black;">รวมพลังฮีโร่ ปกป้องปอด พิชิตภัยฝุ่น PM 2.5</p>
+            
+            <button class="btn btn-primary pulse" style="font-size: 1.5rem; padding: 20px 50px;" aria-label="เริ่มภารกิจ" onclick="showScreen('screen-setup')">เริ่มภารกิจ</button>
+            <div style="margin-top: 10px;">
+                <button class="btn" onclick="showScreen('screen-history')">ประวัติ</button>
+                <button class="btn" onclick="showSettingsModal()">ตั้งค่า</button>
+                <button class="btn" onclick="toggleFullscreen()">เต็มจอ</button>
+            </div>
         </div>
     </div>
 
@@ -225,7 +251,7 @@
         <div class="glass-panel" style="width: 800px; max-width: 95%;">
             <h2>เลือกตัวละคร</h2>
             <div class="card-container">
-                <div class="card" id="char-sky" onclick="selectCharacter('sky')">
+                <div class="card" id="char-sky" aria-label="สกาย ฉายา สายโล่ เอ็นเก้าห้า พลังชีวิต 150 ทักษะ กางโล่ป้องกัน 3 วินาที" tabindex="0" onpointerenter="narrateHero('sky')" onfocus="narrateHero('sky')" ontouchstart="narrateHero('sky')" onkeydown="if(event.key==='Enter'||event.key===' ') selectCharacter('sky')" onclick="selectCharacter('sky')">
                     <img src="Character/Sky.png" class="ui-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="Sky">
                     <div class="ui-fallback">🛡️</div>
                     <h3>Sky (สกาย)</h3>
@@ -233,7 +259,7 @@
                     <p style="color:var(--color-success)">HP: 150</p>
                     <p style="font-size: 0.7rem; margin-top:5px;">กางโล่ป้องกัน 3 วิ<br>(ด่าน 2,3)</p>
                 </div>
-                <div class="card" id="char-zee" onclick="selectCharacter('zee')">
+                <div class="card" id="char-zee" aria-label="ซี ฉายา จอมลุย พลังชีวิต 100 ทักษะ ระเบิดทำลายศัตรู" tabindex="0" onpointerenter="narrateHero('zee')" onfocus="narrateHero('zee')" ontouchstart="narrateHero('zee')" onkeydown="if(event.key==='Enter'||event.key===' ') selectCharacter('zee')" onclick="selectCharacter('zee')">
                     <img src="Character/Zee.png" class="ui-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="Zee">
                     <div class="ui-fallback">💥</div>
                     <h3>Zee (ซี)</h3>
@@ -241,7 +267,7 @@
                     <p style="color:var(--color-warning)">HP: 100</p>
                     <p style="font-size: 0.7rem; margin-top:5px;">ระเบิดทำลายศัตรู<br>(ด่าน 2,3)</p>
                 </div>
-                <div class="card" id="char-bubble" onclick="selectCharacter('bubble')">
+                <div class="card" id="char-bubble" aria-label="บับเบิ้ล ฉายา บอทพิทักษ์ปอด พลังชีวิต 120 ทักษะ ฟื้นฟู HP 30 หน่วย" tabindex="0" onpointerenter="narrateHero('bubble')" onfocus="narrateHero('bubble')" ontouchstart="narrateHero('bubble')" onkeydown="if(event.key==='Enter'||event.key===' ') selectCharacter('bubble')" onclick="selectCharacter('bubble')">
                     <img src="Character/Bubble.png" class="ui-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="Bubble">
                     <div class="ui-fallback">💖</div>
                     <h3>Bubble (บับเบิ้ล)</h3>
@@ -302,7 +328,7 @@
         </div>
     </div>
 
-    <!-- AR Error Modal (Custom MediaPipe Error) -->
+    <!-- AR Error Modal -->
     <div id="modal-mp-error" class="modal-overlay hidden">
         <div class="glass-panel" style="width: 500px;">
             <h2 style="color: var(--color-danger);">ระบบตรวจจับมือโหลดไม่สำเร็จ</h2>
@@ -341,6 +367,7 @@
 
     <!-- Gameplay Screen -->
     <div id="screen-game" class="screen hidden" style="background: transparent;">
+        <div id="game-bg" class="bg-layer"></div>
         <canvas id="game-canvas"></canvas>
         <div id="hud">
             <div class="hud-top">
@@ -427,7 +454,7 @@
         </div>
     </div>
 
-    <!-- History Screen (Leaderboard) -->
+    <!-- History Screen -->
     <div id="screen-history" class="screen hidden">
         <div class="glass-panel" style="width: 80%; max-height: 80%; display:flex; flex-direction:column;">
             <h2 style="color:var(--color-warning)">🏆 Leaderboard (ประวัติการเล่น)</h2>
@@ -500,7 +527,7 @@
             },
             {
                 id: 4, name: "ด่าน 4: ฝึกหายใจ", time: 20, aqiName: "ฟ้า (ดีมาก)", aqiColor: "#00d2ff",
-                objective: "วางมือค้างในวงเป้าหมายและหายใจตามปกติอย่างช้าๆ",
+                objective: "วางมือค้างในวงเป้าหมายและหายใจตามปกติอย่างช้า ๆ",
                 knowledge: "คุณฝึกหายใจอย่างผ่อนคลายและเรียนรู้วิธีดูแลสุขภาพแล้ว (กิจกรรมนี้เป็นการฝึกผ่อนคลายเบื้องต้น)"
             },
             {
@@ -562,7 +589,7 @@
             bossHp: 0,
             bossMaxHp: 30,
             progress: 0,
-            itemsCollected: 0, // In Lv 5 this will mean correct items, but we use groups too
+            itemsCollected: 0,
             collectedGroups: new Set(),
             errorsMade: 0,
             invulnerableTime: 0,
@@ -587,19 +614,36 @@
         const arVideoElement = document.getElementById('ar-video');
 
         /* =========================================
-           11. Asset Manager (Image with Fallback)
+           11. Asset Manager (Image & Backgrounds)
            ========================================= */
+        const ASSETS = {
+            backgrounds: {
+                'start': 'Bg/Poster.png',
+                'level1': 'Bg/Poster.png',
+                'level2': 'Bg/Monsters.png',
+                'level3': 'Bg/MegaBoss.png',
+                'level4': 'Bg/Healthy.png',
+                'level5': 'Bg/FoodBasket.png'
+            }
+        };
+
         const assetPaths = {
             'sky': 'Character/Sky.png', 'zee': 'Character/Zee.png', 'bubble': 'Character/Bubble.png', 'drAir': 'Character/Dr-Air.png',
             'n95': 'Images/N95-masks.png', 'cloth': 'Images/Cloth-mask.png', 'hat': 'Images/Hats.png', 'toy': 'Images/Toys.png',
             'yellowDust': 'Character/Yellow-Dust-Demon.png', 'redDust': 'Character/Red-Dust-Demon.png', 'boss': 'Character/MegaBoss.png',
-            'projectile': 'Images/Dust-Cloud.png', // Reusing generic dust conceptually if path not specified
+            'projectile': 'Images/Dust-Cloud.png', 
             'basket': 'Images/Basket.png',
-            // Foods with assigned Groups for Level 5: 1=Protein, 2=Carb, 3=Mineral, 4=Vitamin, 5=Fat
             'orange': 'Food/Orange.png', 'apple': 'Food/Apple.png', 'watermelon': 'Food/Watermelon.png', 'banana': 'Food/Banana.png', 
             'guava': 'Food/Guava.png', 'tomatoes': 'Food/Tomatoes.png', 'broccoli': 'Food/Broccoli.png', 'cabbage': 'Food/Cabbage.png', 
             'carrot': 'Food/Carrot.png', 'fish': 'Food/Fish.png', 'eggs': 'Food/Eggs.png', 'milk': 'Food/Milk.png',
-            'candy': 'Food/Candy.png', 'soda': 'Food/Soft-drinks.png', 'chips': 'Food/Potato-chips.png', 'fries': 'Food/Fried-food.png'
+            'candy': 'Food/Candy.png', 'soda': 'Food/Soft-drinks.png', 'chips': 'Food/Potato-chips.png', 'fries': 'Food/Fried-food.png',
+            // Load BGs via Preloader too
+            'bgStart': ASSETS.backgrounds.start,
+            'bgLevel1': ASSETS.backgrounds.level1,
+            'bgLevel2': ASSETS.backgrounds.level2,
+            'bgLevel3': ASSETS.backgrounds.level3,
+            'bgLevel4': ASSETS.backgrounds.level4,
+            'bgLevel5': ASSETS.backgrounds.level5
         };
         const fallbacks = {
             'sky': '🛡️', 'zee': '💥', 'bubble': '💖', 'drAir': '👨‍⚕️',
@@ -609,7 +653,13 @@
             'orange': '🍊', 'apple': '🍎', 'watermelon': '🍉', 'banana': '🍌', 'guava': '🍏',
             'tomatoes': '🍅', 'broccoli': '🥦', 'cabbage': '🥬', 'carrot': '🥕',
             'fish': '🐟', 'eggs': '🥚', 'milk': '🥛',
-            'candy': '🍬', 'soda': '🥤', 'chips': '🥔', 'fries': '🍟'
+            'candy': '🍬', 'soda': '🥤', 'chips': '🥔', 'fries': '🍟',
+            'bgStart': 'radial-gradient(circle at center, #1a253c 0%, #0a0f1a 100%)',
+            'bgLevel1': 'radial-gradient(circle at center, #1a253c 0%, #0a0f1a 100%)',
+            'bgLevel2': 'radial-gradient(circle at center, #2a153c 0%, #0a051a 100%)',
+            'bgLevel3': 'radial-gradient(circle at center, #3a051c 0%, #1a000a 100%)',
+            'bgLevel4': 'radial-gradient(circle at center, #00354c 0%, #00101a 100%)',
+            'bgLevel5': 'radial-gradient(circle at center, #153c1a 0%, #051a0a 100%)'
         };
         const foodGroupsInfo = {
             'fish': 1, 'eggs': 1, // Protein
@@ -628,12 +678,47 @@
                 let img = new Image();
                 img.src = assetPaths[key];
                 img.onload = () => { loadedAssets[key] = img; checkComplete(); };
-                img.onerror = () => { loadedAssets[key] = fallbacks[key]; checkComplete(); }; // Save Emoji String as fallback
+                img.onerror = () => { loadedAssets[key] = fallbacks[key]; checkComplete(); };
             }
             function checkComplete() {
                 loaded++;
                 document.getElementById('loading-bar').style.width = `${(loaded/total)*100}%`;
                 if(loaded >= total) setTimeout(onComplete, 500);
+            }
+        }
+
+        // Apply Screen Background based on Manifest logic
+        function applyScreenBackground(elementId, bgKey, overlay) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const asset = loadedAssets[bgKey];
+            
+            // Clean up old classes (important for level 4 breath animation)
+            el.className = el.id === 'game-bg' ? 'bg-layer' : (el.id === 'start-bg' ? 'bg-layer' : el.className.replace(' bg-anim-breath', ''));
+
+            if (asset instanceof Image) {
+                el.style.background = `${overlay}, url('${asset.src}')`;
+                el.style.backgroundSize = 'cover';
+                el.style.backgroundPosition = 'center';
+                el.style.backgroundRepeat = 'no-repeat';
+            } else {
+                el.style.background = fallbacks[bgKey];
+            }
+        }
+
+        function applyLevelBackground(levelNum) {
+            const bgDiv = document.getElementById('game-bg');
+            if (levelNum === 1) {
+                applyScreenBackground('game-bg', 'bgLevel1', 'linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5))');
+            } else if (levelNum === 2) {
+                applyScreenBackground('game-bg', 'bgLevel2', 'linear-gradient(rgba(50,0,50,0.6), rgba(0,0,0,0.8))');
+            } else if (levelNum === 3) {
+                applyScreenBackground('game-bg', 'bgLevel3', 'linear-gradient(rgba(20,0,40,0.7), rgba(0,0,0,0.9))');
+            } else if (levelNum === 4) {
+                applyScreenBackground('game-bg', 'bgLevel4', 'linear-gradient(rgba(0,100,150,0.4), rgba(0,50,80,0.6))');
+                if (!gameState.reducedMotion) bgDiv.classList.add('bg-anim-breath');
+            } else if (levelNum === 5) {
+                applyScreenBackground('game-bg', 'bgLevel5', 'linear-gradient(rgba(20,50,10,0.5), rgba(10,30,0,0.7))');
             }
         }
 
@@ -698,12 +783,24 @@
            12. Screen Manager & Settings
            ========================================= */
         function showScreen(screenId) {
+            cleanupCurrentScreen(); // Req 12
             document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
             document.getElementById(screenId).classList.remove('hidden');
             gameState.screen = screenId;
+            
+            if(screenId === 'screen-start') { 
+                applyScreenBackground('start-bg', 'bgStart', 'linear-gradient(rgba(3, 8, 24, 0.42), rgba(3, 8, 24, 0.72))');
+                playBGM(); 
+                
+                // Welcome audio logic
+                if (globalInteractionDone) {
+                    playWelcomeNarration();
+                } else {
+                    pendingWelcomeNarration = true;
+                }
+            }
             if(screenId === 'screen-map') { updateMissionMap(); playBGM(); }
             if(screenId === 'screen-history') updateHistoryUI();
-            if(screenId === 'screen-start') { playBGM(); }
         }
 
         function toggleFullscreen() {
@@ -747,8 +844,29 @@
         }
 
         function applySettings() {
-            if(gameState.reducedMotion) document.querySelectorAll('.pulse').forEach(el => el.classList.add('no-motion'));
-            else document.querySelectorAll('.pulse').forEach(el => el.classList.remove('no-motion'));
+            if(gameState.reducedMotion) {
+                document.body.classList.add('no-motion');
+            } else {
+                document.body.classList.remove('no-motion');
+            }
+        }
+        
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.style.background = 'rgba(0,0,0,0.8)';
+            toast.style.color = 'white';
+            toast.style.padding = '10px 20px';
+            toast.style.borderRadius = '10px';
+            toast.style.border = '1px solid var(--color-warning)';
+            toast.style.fontFamily = 'var(--font-body)';
+            toast.innerText = msg;
+            toast.style.transition = 'opacity 0.5s';
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
         }
 
         /* =========================================
@@ -996,7 +1114,6 @@
            17. Gesture Detection & Mapping
            ========================================= */
         function mapVideoPointToCanvas(landmark) {
-            // Fix 4: Correctly map coordinates accounting for object-fit: cover
             const videoAspect = 640 / 480; 
             const canvasAspect = canvas.width / canvas.height;
             let drawWidth = canvas.width;
@@ -1005,12 +1122,10 @@
             let offsetY = 0;
 
             if (canvasAspect > videoAspect) {
-                // Canvas wider, video cropped vertically
                 drawWidth = canvas.width;
                 drawHeight = canvas.width / videoAspect;
                 offsetY = -(drawHeight - canvas.height) / 2;
             } else {
-                // Canvas taller, video cropped horizontally
                 drawHeight = canvas.height;
                 drawWidth = canvas.height * videoAspect;
                 offsetX = -(drawWidth - canvas.width) / 2;
@@ -1141,8 +1256,8 @@
             const hero = gameState.selectedHero;
             
             let heroIcon = loadedAssets[hero];
-            if(typeof heroIcon === 'string') document.getElementById('skill-icon').innerText = heroIcon; // Emoji fallback
-            else document.getElementById('skill-icon').innerText = fallbacks[hero]; // If Image, use string just for UI
+            if(typeof heroIcon === 'string') document.getElementById('skill-icon').innerText = heroIcon; 
+            else document.getElementById('skill-icon').innerText = fallbacks[hero]; 
             
             let skillApplicable = false;
             if(hero === 'sky') {
@@ -1166,8 +1281,9 @@
             }
 
             resizeCanvas();
+            applyLevelBackground(levelNum); // Integrate Custom Background Logic
             showScreen('screen-game');
-            speak(lData.objective);
+            speakThai(lData.objective);
             
             stopAllTimers();
             
@@ -1424,7 +1540,6 @@
             for(let i=0; i<6; i++) spawnFood();
         }
         function spawnFood() {
-            // Need to spawn distinct groups to ensure players can collect all 5
             const goodKeys = ['orange', 'apple', 'watermelon', 'banana', 'guava', 'tomatoes', 'broccoli', 'cabbage', 'carrot', 'fish', 'eggs', 'milk'];
             const badKeys = ['candy', 'soda', 'chips', 'fries'];
             
@@ -1463,7 +1578,6 @@
                         playSound(1000, 'sine', 0.1); 
                         createParticles(e.x+e.w/2, e.y+e.h/2, 'green', 10);
                         
-                        // Fix 2: Check 5 Groups Collected instead of just 5 items
                         if(levelState.collectedGroups.size >= 5) finishLevel('passed');
                     } else {
                         gameState.levelScore = Math.max(0, gameState.levelScore - 30);
@@ -1717,7 +1831,7 @@
             saveHistory(resultStatus);
 
             showScreen('screen-result');
-            speak(lData.knowledge); 
+            speakThai(lData.knowledge); 
         }
 
         function showMissionComplete() {
@@ -1725,7 +1839,7 @@
             document.getElementById('complete-score').innerText = gameState.score;
             showScreen('screen-complete');
             playSound(600, 'square', 0.1); setTimeout(()=>playSound(800, 'square', 0.2), 100); setTimeout(()=>playSound(1000, 'square', 0.4), 200);
-            speak("ภารกิจสำเร็จ! คุณคือฮีโร่พิทักษ์อากาศ อย่าลืมตรวจสอบคุณภาพอากาศ สวมหน้ากากที่เหมาะสม ลดกิจกรรมกลางแจ้งเมื่อค่าฝุ่นสูง และดูแลสุขภาพอย่างสม่ำเสมอ");
+            speakThai("ภารกิจสำเร็จ! คุณคือฮีโร่พิทักษ์อากาศ อย่าลืมตรวจสอบคุณภาพอากาศ สวมหน้ากากที่เหมาะสม ลดกิจกรรมกลางแจ้งเมื่อค่าฝุ่นสูง และดูแลสุขภาพอย่างสม่ำเสมอ");
         }
 
         function restartLevel() {
@@ -1829,16 +1943,54 @@
         /* =========================================
            10. Speech System
            ========================================= */
-        function speak(text) {
-            if(!gameState.narrationEnabled || !('speechSynthesis' in window)) return;
+        let lastSpeakTime = 0;
+        let lastSpokenText = "";
+        let lastNarratedHero = null;
+        let welcomeNarrationPlayed = false;
+        let pendingWelcomeNarration = false;
+
+        function speakThai(text) {
+            if (!gameState.narrationEnabled || !('speechSynthesis' in window)) return;
+            const now = performance.now();
+            
+            // Debounce for 1 second if same text
+            if (text === lastSpokenText && now - lastSpeakTime < 1000) return;
+
             window.speechSynthesis.cancel();
             try {
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'th-TH'; utterance.rate = 1.0;
+                utterance.lang = 'th-TH';
+                utterance.rate = 1.0;
                 window.speechSynthesis.speak(utterance);
-            } catch(e){}
+                lastSpokenText = text;
+                lastSpeakTime = now;
+            } catch(e) {
+                showToast("ไม่สามารถเล่นเสียงบรรยายได้");
+            }
         }
-        function stopSpeech() { if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+        
+        function stopSpeech() {
+            if('speechSynthesis' in window) window.speechSynthesis.cancel();
+        }
+
+        function playWelcomeNarration() {
+            if (welcomeNarrationPlayed || !gameState.narrationEnabled) return;
+            try {
+                speakThai("ยินดีต้อนรับ เข้าสู่เกม ฮันเตอร์ส สองจุดห้า หน่วยล่าท้าฝุ่น");
+                welcomeNarrationPlayed = true;
+                pendingWelcomeNarration = false;
+            } catch (e) {
+                pendingWelcomeNarration = true;
+            }
+        }
+
+        function narrateHero(hero) {
+            if (lastNarratedHero === hero) return;
+            lastNarratedHero = hero;
+            if (hero === 'sky') speakThai("สกาย ฉายา สายโล่ เอ็นเก้าห้า");
+            else if (hero === 'zee') speakThai("ซี ฉายา จอมลุย");
+            else if (hero === 'bubble') speakThai("บับเบิ้ล ฉายา บอทพิทักษ์ปอด");
+        }
 
         /* =========================================
            31. Cleanup
@@ -1848,16 +2000,32 @@
             if(animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
         }
 
+        function cleanupCurrentScreen() {
+            stopSpeech();
+            lastNarratedHero = null;
+        }
+
         /* =========================================
            32. Initialization
            ========================================= */
+        let globalInteractionDone = false;
+        
         function initGame() {
             loadProgress();
             
-            // Fix 1: Load external assets dynamically and assign fallback emojis
             preloadAssets(() => {
                 showScreen('screen-start');
             });
+
+            // Global Interaction Listener for Auto-Play Policy
+            window.addEventListener('pointerdown', () => {
+                if (!globalInteractionDone) {
+                    globalInteractionDone = true;
+                    if (gameState.screen === 'screen-start' && pendingWelcomeNarration) {
+                        playWelcomeNarration();
+                    }
+                }
+            }, { passive: true });
 
             document.addEventListener("visibilitychange", () => {
                 if (document.hidden && gameState.status === "playing" && !gameState.paused) {
