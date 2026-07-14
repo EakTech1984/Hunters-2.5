@@ -1,0 +1,1300 @@
+# MASTER PROMPT: Hunters 2.5 หน่วยล่าท้าฝุ่น
+## ฉบับรวมและปรับแก้ความขัดแย้ง Version 8.0 (กรกฎาคม 2569)
+
+> ใช้เอกสารนี้เป็นข้อกำหนดหลักเพียงฉบับเดียวสำหรับการสร้าง ตรวจสอบ หรือปรับปรุงเกม
+> “Hunters 2.5 หน่วยล่าท้าฝุ่น” ข้อความในเอกสารนี้มีลำดับความสำคัญเหนือ Prompt และคำสั่งรุ่นก่อนหน้า
+
+---
+
+# ส่วนที่ 1 บทบาทและกติกาการทำงาน
+
+คุณคือผู้เชี่ยวชาญระดับสูงด้าน:
+- Educational Technology
+- Game-Based Learning และ Active Learning
+- UX/UI สำหรับเด็กและผู้เรียนที่มีความต้องการจำเป็นพิเศษ
+- HTML5, CSS3 และ Vanilla JavaScript
+- Canvas API, Web Audio API, Web Speech API
+- Progressive Enhancement และ Accessibility
+- Web Camera, MediaDevices API และ Computer Vision
+- MediaPipe Tasks Vision - Hand Landmarker สำหรับเว็บ
+- GitHub Pages และการตรวจสอบโค้ดเว็บแบบ Static Analysis
+
+หน้าที่ของคุณคือสร้างหรือปรับปรุงเกมเว็บเพื่อการเรียนรู้ชื่อ **“Hunters 2.5 หน่วยล่าท้าฝุ่น”** โดยใช้ไฟล์โค้ดหลักเพียงไฟล์เดียวชื่อ `index.html` ซึ่งรวม HTML, CSS และ JavaScript ไว้ในไฟล์เดียว ไม่ใช้ Backend ไม่ใช้ฐานข้อมูลภายนอก ไม่ใช้ API Key และไม่ต้อง Build
+
+ไฟล์ภาพและสื่อประกอบให้เก็บเป็น Relative Path ในโฟลเดอร์ `Bg`, `Character`, `Images` และ `Food` ตาม Asset Manifest กลาง เกมต้องมี CSS/SVG/Emoji Fallback และยังเล่นต่อได้เมื่อภาพบางไฟล์โหลดไม่สำเร็จ
+
+## 1.1 โหมดการทำงาน
+
+### กรณีสร้างเกมใหม่
+- อ่านข้อกำหนดทั้งหมดก่อนเขียนโค้ด
+- สร้างระบบ P0 ให้สมบูรณ์ก่อน P1 และ P2
+- ห้ามตัด Gameplay ของทั้ง 5 ด่านเพื่อแลกกับเอฟเฟกต์
+
+### กรณีมีไฟล์ `index.html` เดิมแนบมา
+- ใช้ไฟล์เดิมเป็นฐานเพียงไฟล์เดียว
+- อ่านตั้งแต่ `<!DOCTYPE html>` ถึง `</html>`
+- ห้ามสร้างเกมใหม่ทั้งชุด เว้นแต่โค้ดเดิมเสียหายจนแก้ไม่ได้และต้องรายงานหลักฐานก่อน
+- ตรวจสอบและรายงานปัญหาก่อนแก้ไข
+- รักษาระบบที่ทำงานอยู่เดิม และแก้เฉพาะส่วนที่เกี่ยวข้อง
+
+## 1.2 ข้อห้ามร่วม
+- ห้ามมี `TODO`
+- ห้ามมี Pseudocode
+- ห้ามมีฟังก์ชันว่าง
+- ห้ามเขียนว่า “ส่วนอื่นเหมือนเดิม”
+- ห้ามตัดโค้ดหรือย่อโค้ดด้วย `...`
+- ห้ามใช้ `alert()`, `confirm()` หรือ `prompt()`
+- ห้ามกล่าวอ้างว่าระบบทำงาน หากตรวจสอบจากโค้ดหรือทดสอบไม่ได้
+- ห้ามเดาผลการทดสอบกล้อง อุปกรณ์ หรือ Browser
+- เมื่อยืนยันไม่ได้ ให้ระบุว่า **“ยืนยันไม่ได้จากการตรวจสอบโค้ดเพียงอย่างเดียว ต้องทดสอบบนอุปกรณ์จริงหรือ GitHub Pages”**
+
+---
+
+# ส่วนที่ 2 ข้อสรุปที่ใช้แทนข้อกำหนดเดิมเมื่อมีความขัดแย้ง
+
+1. ชื่อเกมใช้รูปแบบเดียวทุกจุด: **Hunters 2.5 หน่วยล่าท้าฝุ่น**
+2. เกมเป็น **Single-player** ไม่มีระบบ Co-op ในขอบเขตนี้ จึงห้ามกล่าวอ้างว่าพัฒนาทักษะการทำงานเป็นทีมผ่าน Co-op
+3. โหมด AR เป็น **Camera-based AR Overlay + Hand Tracking** ไม่ใช่ระบบวางวัตถุยึดตำแหน่งกับพื้น/ผนังในโลกจริง และห้ามกล่าวอ้างว่ามี Spatial Tracking หากไม่ได้ใช้เทคโนโลยีดังกล่าว
+4. ระบบตรวจจับใช้ **มือ** เท่านั้น จึงห้ามกล่าวอ้างว่าตรวจจับลำตัว การโยกตัว การกางแขน การย่อตัว หรือการหายใจจริง
+5. ด่าน 4 ใช้ชื่อ **“ฝึกหายใจ ดูแลสุขภาพ”** ไม่ใช้คำว่า “สร้างภูมิคุ้มกัน” และไม่ให้ผู้เล่นกลั้นหายใจ
+6. อาหารในด่าน 5 มีเป้าหมายเพื่อเรียนรู้ **อาหารครบ 5 หมู่และการรับประทานอย่างเหมาะสม** ห้ามกล่าวอ้างว่าอาหาร วิตามิน หรืออาหารเสริมป้องกัน/กำจัด/รักษาผลกระทบจาก PM 2.5
+7. หน้า Start Screen ใช้ `Bg/Poster.png` แบบโปสเตอร์ชั้นหน้า `contain` พร้อมพื้นหลังเติมพื้นที่แบบ Blur; ห้ามใช้ `cover` กับโปสเตอร์ชั้นหลัก
+8. พื้นหลังด่าน 1 ใช้ `Bg/Yellow-Zone.png` ไม่ใช้ `Bg/Poster.png`
+9. ด่าน 5 ใช้เวลา **45 วินาที** และผ่านเมื่อเก็บอาหารครบ **5 หมู่** ไม่ใช่เพียง 5 ชิ้น
+10. ระบบเสียงบรรยายต้องแยกจากระบบกล้องอย่างเด็ดขาด การเปิด-ปิดเสียงบรรยายห้ามเปิด ปิด หรือรีสตาร์ตกล้อง
+11. ใช้ AR Lifecycle กลางเพียงชุดเดียว ป้องกันการเปิดกล้องซ้ำและ `NotReadableError`
+12. ใช้ MediaPipe **Tasks Vision Hand Landmarker** แบบกำหนดเวอร์ชันคงที่ ห้ามผสมกับ Legacy `@mediapipe/hands`, `camera_utils` หรือ `new Camera()` ในระบบเดียวกัน
+13. คะแนนรวมคำนวณจากคะแนนดีที่สุดของแต่ละด่าน เพื่อป้องกันการสะสมคะแนนไม่จำกัดจากการเล่นซ้ำ
+
+---
+
+# ส่วนที่ 3 แนวคิดการเรียนรู้และกลุ่มเป้าหมาย
+
+## 3.1 กลุ่มเป้าหมาย
+- นักเรียนชั้นประถมศึกษาปีที่ 4-6
+- อายุประมาณ 9-12 ปี
+- เด็กทั่วไป
+- ผู้เรียนที่มีความต้องการจำเป็นพิเศษซึ่งสามารถใช้เมาส์ จอสัมผัส หรือกล้องได้
+
+UI ต้องมีปุ่มขนาดใหญ่ ข้อความสั้น อ่านง่าย Contrast เพียงพอ และมีทางเลือก Mouse/Touch ที่ทำงานได้ครบทุกด่านแม้ AR ใช้งานไม่ได้
+
+## 3.2 เป้าหมายเชิงพฤติกรรม K-S-A
+
+### Knowledge (K)
+ผู้เรียนสามารถ:
+- อธิบายความหมายของ PM 2.5 ในระดับเบื้องต้น
+- เข้าใจว่าฝุ่นละอองขนาดเล็กอาจกระทบระบบทางเดินหายใจและสุขภาพ
+- อ่านสีและชื่อระดับคุณภาพอากาศแบบจำลองได้
+- เลือกอุปกรณ์ช่วยลดการสูดฝุ่น เช่น หน้ากากกรองอนุภาคที่เหมาะสมและสวมกระชับ
+- รู้จักแนวทางลดการสัมผัสฝุ่น เช่น ตรวจข้อมูลคุณภาพอากาศและลดกิจกรรมกลางแจ้งเมื่อค่าฝุ่นสูง
+- จำแนกอาหารครบ 5 หมู่และอาหารที่ควรรับประทานแต่น้อย
+
+### Skills (S)
+ผู้เรียนได้ฝึก:
+- การสังเกต การตัดสินใจ และการเลือกคำตอบจากสถานการณ์
+- การประสานตา-มือ การแตะ การลาก การชี้ค้าง และการปัด
+- การอ่านข้อมูลจำลองและเชื่อมโยงกับการตรวจข้อมูลจริงจากแหล่งที่น่าเชื่อถือ
+- การใช้เทคโนโลยี AR/Computer Vision อย่างสร้างสรรค์และปลอดภัย
+
+### Attitude (A)
+ผู้เรียน:
+- ตระหนักถึงปัญหาฝุ่นโดยไม่ตื่นตระหนก
+- เห็นความสำคัญของการสวมหน้ากากที่เหมาะสมและลดการสัมผัสฝุ่น
+- เห็นความสำคัญของการรับประทานอาหารหลากหลายครบหมู่
+- มีทัศนคติเชิงบวกต่อการดูแลสุขภาพและสิ่งแวดล้อมส่วนรวม
+
+## 3.3 รูปแบบการเรียนรู้
+- Game-Based Learning
+- Active Learning
+- Experiential Learning
+- Learning by Doing
+- Gamification
+- Motion-Based Interaction
+- Situated Learning
+- Just-in-time Educational Feedback ผ่าน Dr.Air หลังจบด่าน
+
+---
+
+# ส่วนที่ 4 ลำดับความสำคัญของระบบ
+
+## P0 - ต้องทำงานได้จริงก่อน
+- Loading Screen
+- Start Screen
+- Player Setup
+- Character Select
+- Control Mode Select
+- Mission Map
+- Gameplay ครบ 5 ด่าน
+- Mouse ครบ 5 ด่าน
+- Touch ครบ 5 ด่าน
+- Score, HP, Timer, Stars
+- เงื่อนไขผ่าน/ไม่ผ่าน
+- ปลดล็อกด่าน
+- Result Screen
+- Mission Complete
+- LocalStorage แบบมี Fallback
+- Pause, Resume, Restart, Quit to Map
+- ไม่มี SyntaxError/ReferenceError ที่ทำให้เกมหยุด
+
+## P1 - ระบบสำคัญ
+- MediaPipe Tasks Vision Hand Landmarker
+- Camera AR และ Gesture Recognition
+- AR Lifecycle และ Error Handling
+- Character Skills
+- Web Audio
+- Speech Synthesis ภาษาไทย
+- Leaderboard
+- เปลี่ยนโหมดระหว่างเล่น
+- Asset Manager และ Fallback
+
+## P2 - เอฟเฟกต์เสริม
+- Particle, Fog, Neon Glow
+- Screen Shake, Hologram, Confetti
+- Animated Gradient, Boss Explosion, Floating Score
+
+อุปกรณ์ประสิทธิภาพต่ำให้ลด P2 ก่อน ห้ามลด P0
+
+---
+
+# ส่วนที่ 5 ข้อกำหนดทางเทคนิค
+
+## 5.1 เทคโนโลยี
+ใช้:
+- HTML5
+- CSS3
+- Vanilla JavaScript
+- Canvas API
+- Web Audio API
+- SpeechSynthesis API
+- Pointer Events
+- MediaDevices API
+- LocalStorage
+- requestAnimationFrame
+- Page Visibility API
+- MediaPipe Tasks Vision Hand Landmarker
+
+ไม่ใช้ React, Vue, Angular หรือ Framework ที่ต้อง Compile/Build
+
+## 5.2 MediaPipe ที่อนุญาต
+กำหนดค่ากลาง:
+```js
+const MEDIAPIPE_CONFIG = {
+  version: "0.10.35",
+  moduleUrl: "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs",
+  wasmRoot: "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm",
+  modelUrl: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task"
+};
+```
+
+ข้อกำหนด:
+- โหลดด้วย Dynamic `import()` หลังผู้เล่นเลือก AR และกดยืนยันเท่านั้น
+- ป้องกันการโหลดซ้ำด้วย Promise กลาง
+- ห้ามโหลดใน `<head>` หรือ Loading Screen
+- ห้ามใช้ `latest` สำหรับ package/WASM
+- ใช้ `runningMode: "VIDEO"`
+- `numHands: 1` เป็นค่าเริ่มต้น
+- ตั้งค่าความมั่นใจประมาณ 0.5-0.7 และรวมไว้ใน Config กลาง
+- ห้ามใช้ Legacy `Hands`, `Camera` จาก `camera_utils` หรือ `hands.send()`
+- ห้ามผสม Tasks API และ Legacy API
+- `detectForVideo()` ทำงานแบบ synchronous จึงต้องตรวจ `video.currentTime` และจำกัดอัตราประมวลผล ไม่เรียกซ้ำหลายครั้งในเฟรมเดียว
+
+## 5.3 Secure Context
+AR ทำงานเฉพาะ HTTPS, GitHub Pages หรือ localhost
+หากเป็น `file://`, `navigator.mediaDevices` ไม่มี หรือสิทธิ์ถูกปฏิเสธ:
+- ปิด/Disable การเลือก AR ตามความเหมาะสม
+- แสดง Custom Modal
+- เสนอ Mouse, Touch, Retry และกลับหน้าเลือกโหมด
+- เกมห้ามค้าง
+
+---
+
+# ส่วนที่ 6 โครงสร้าง State กลาง
+
+## 6.1 Game State
+```js
+const gameState = {
+  schemaVersion: 1,
+  screen: "loading",
+  previousScreen: null,
+  status: "idle", // idle,countdown,playing,paused,passed,failed,result
+  controlMode: null, // ar|mouse|touch
+  pendingControlMode: null,
+  previousControlMode: null,
+  playerName: "ฮีโร่นิรนาม",
+  selectedHero: null,
+  currentLevel: 0,
+  unlockedLevel: 1,
+  completedLevels: [],
+  score: 0,
+  levelScore: 0,
+  bestScores: {1:0,2:0,3:0,4:0,5:0},
+  hp: 100,
+  maxHp: 100,
+  timeLeft: 0,
+  stars: 0,
+  totalStars: 0,
+  paused: false,
+  levelFinished: false,
+  soundEnabled: true,
+  narrationEnabled: true,
+  vibrationEnabled: true,
+  reducedMotion: false
+};
+```
+
+ใช้ `gameState.controlMode` เป็นแหล่งข้อมูลหลักเพียงแห่งเดียว ห้ามประกาศตัวแปร `controlMode` แยกซ้ำ
+
+## 6.2 Input State
+```js
+const inputState = {
+  x: 0,
+  y: 0,
+  lastX: 0,
+  lastY: 0,
+  velocityX: 0,
+  velocityY: 0,
+  active: false,
+  pressed: false,
+  justPressed: false,
+  released: false,
+  gesture: "none",
+  holdDuration: 0,
+  source: null
+};
+```
+
+ข้อกำหนด:
+- Mouse, Touch และ AR เขียนข้อมูลลง Input State เดียวกัน
+- `justPressed` และ `released` มีผลหนึ่งเฟรม แล้วรีเซ็ตหลัง `updateGame()`
+- เปลี่ยนโหมดแล้วล้าง Input เก่า
+- Handler ของโหมดที่ไม่ใช้งานต้องไม่ทำงาน
+- Game Logic ของด่านห้ามแยกเป็น 3 ชุดตามโหมด
+
+## 6.3 AR Lifecycle
+```js
+const arLifecycle = {
+  status: "idle", // idle|loading|starting|active|stopping|error
+  stream: null,
+  startPromise: null,
+  stopPromise: null,
+  loadPromise: null,
+  processingFrameId: null,
+  sessionToken: 0,
+  lastVideoTime: -1,
+  lastInferenceTime: 0,
+  lastError: null,
+  handLandmarker: null
+};
+```
+
+ห้ามใช้ Boolean หลายตัวที่ขัดกัน เช่น `cameraStarted`, `cameraLoading`, `isOpeningCamera`
+
+---
+
+# ส่วนที่ 7 ลำดับหน้าจอและการไหลของเกม
+
+ลำดับหลัก:
+1. Loading Screen
+2. Start Screen
+3. Player Setup
+4. Character Select
+5. Control Mode Select
+6. AR Camera Check เฉพาะ AR
+7. Mission Map
+8. Gameplay
+9. Level Result
+10. Mission Map หรือด่านถัดไป
+11. Mission Complete เมื่อผ่านครบ 5 ด่าน
+
+ห้ามข้ามหน้าเลือกโหมด แม้ LocalStorage มีโหมดล่าสุด ผู้เล่นต้องเลือกและยืนยันเอง
+
+## 7.1 Loading Screen
+โหลดเฉพาะ UI, State, LocalStorage, Canvas และ Asset ภายใน
+ห้าม:
+- เปิดกล้อง
+- ขอสิทธิ์กล้อง
+- โหลด MediaPipe
+- เริ่ม AudioContext โดยไม่มี User Interaction
+
+Loading ต้องจบแม้ Asset บางไฟล์เสีย และ Progress Bar ห้ามค้าง
+
+## 7.2 Start Screen
+ใช้ `Bg/Poster.png` และระบบพื้นหลัง 2 ชั้น:
+
+### ชั้น 1 Background Fill
+- ใช้ภาพเดียวกันแบบ `cover`
+- Blur 12-18px
+- ลดความสว่าง
+- Scale เล็กน้อยเพื่อไม่ให้เห็นขอบ Blur
+- Overlay สีเข้ม
+- `pointer-events: none`
+
+### ชั้น 2 Poster Foreground
+- ใช้ `contain`
+- `background-position: center center`
+- `background-repeat: no-repeat`
+- ห้ามใช้ `cover`
+- ภาพไม่บิดและข้อความบนโปสเตอร์ไม่ถูกตัด
+- `pointer-events: none`
+
+ลำดับ Layer:
+1. Fill Blur
+2. Poster Contain
+3. Readability Overlay
+4. Start UI
+5. Toast/Modal
+
+รองรับ Landscape, Portrait และ Safe Area โดยยอมให้มีพื้นที่ว่างซึ่งเติมด้วยชั้น Blur
+
+องค์ประกอบ:
+- HUNTERS 2.5
+- หน่วยล่าท้าฝุ่น
+- คำโปรย “รวมพลังฮีโร่ ปกป้องปอด พิชิตภัยฝุ่น PM 2.5”
+- เริ่มภารกิจ
+- วิธีเล่น
+- ประวัติการเล่น
+- ตั้งค่า
+- เปิด/ปิดเสียง
+- Fullscreen เมื่อรองรับ
+
+หาก Poster โหลดไม่สำเร็จ:
+- ซ่อนภาพ ไม่แสดง Broken Image
+- ใช้ Gradient Fallback
+- ปุ่มเริ่มต้องยังกดได้
+
+## 7.3 Player Setup
+- หัวข้อ “ตั้งชื่อฮีโร่ของคุณ”
+- เว้นว่างได้ ใช้ “ฮีโร่นิรนาม”
+- Trim ช่องว่าง
+- จำกัด 20 ตัวอักษร
+- บันทึก LocalStorage แบบ try/catch
+
+## 7.4 Mission Map
+- แสดง 5 ด่าน
+- เริ่มปลดล็อกด่าน 1
+- สถานะ: ล็อก, พร้อมเล่น, ผ่านแล้ว, คะแนนสูงสุด
+- ด่านล็อกกดไม่ได้
+- เมื่อผ่านจึงปลดล็อกด่านถัดไปและบันทึกทันที
+- มีปุ่มหน้าแรก ประวัติ ตั้งค่า เลือกตัวละครใหม่ และเปลี่ยนโหมด
+
+---
+
+# ส่วนที่ 8 ตัวละครและทักษะ
+
+## Sky - สกาย
+- ฉายา: สายโล่ N95
+- Asset: `Character/Sky.png`
+- Max HP 150
+- Skill “กางโล่ N95” ป้องกันความเสียหาย 3 วินาที
+- Cooldown 10 วินาที
+- ใช้ในด่าน 2 และ 3
+
+## Zee - ซี
+- ฉายา: จอมลุย
+- Asset: `Character/Zee.png`
+- Max HP 100
+- Skill “ระเบิดวิตามินซี” เป็นชื่อแฟนตาซีในเกมเท่านั้น
+- ด่าน 2 กำจัดศัตรูปกติบนหน้าจอ
+- ด่าน 3 Damage บอส 6 หน่วย
+- Cooldown 15 วินาที
+- ห้ามกล่าวอ้างว่าวิตามินซีทำลายหรือป้องกัน PM 2.5 จริง
+
+## Bubble - บับเบิ้ล
+- ฉายา: บอทพิทักษ์ปอด
+- Asset: `Character/Bubble.png`
+- Max HP 120
+- Skill “ละอองฟื้นฟู” เพิ่ม HP 30 แต่ไม่เกิน Max HP
+- Cooldown 8 วินาที
+- ใช้ในด่านที่มี HP
+
+## Dr.Air - ดร.แอร์
+- Asset: `Character/Dr-Air.png`
+- ใช้ให้คำแนะนำหลังด่าน
+- ห้ามวินิจฉัยหรือให้คำแนะนำรักษาโรค
+
+การ์ดตัวละครต้องรองรับ Mouse, Touch, Keyboard, Focus, Enter และ Space พร้อม `aria-label`
+
+---
+
+# ส่วนที่ 9 โหมดควบคุมและ Input Abstraction
+
+## 9.1 หน้าเลือกโหมด
+มีการ์ด 3 ใบ:
+- 📷 กล้อง AR
+- 🖱️ เมาส์
+- 👆 สัมผัส
+
+ระบบอาจติดป้าย “แนะนำ” แต่ห้ามเลือกแทนผู้เล่น
+ปุ่มยืนยัน Disabled จนกว่าจะเลือก
+แสดงโหมดล่าสุดได้แต่ไม่เลือกอัตโนมัติ
+
+## 9.2 Mouse
+- Pointer Move, Down, Up
+- Click, Hold, Drag, Release, Swipe
+- ไม่เปิดกล้องและไม่โหลด MediaPipe
+
+## 9.3 Touch
+- ใช้ Pointer Events เป็นหลัก
+- รองรับแตะ ลาก ปัด กดค้าง
+- ป้องกัน Scroll/Zoom เฉพาะ Gameplay Area
+- ห้ามปิด Scroll ทั้งเว็บ เพราะหน้า History ต้องเลื่อนได้
+
+## 9.4 AR
+- ใช้ Hand Landmarker 21 จุด
+- Mirror ภาพกล้อง
+- แปลงพิกัดผ่าน `mapVideoPointToCanvas()` กลาง
+- รองรับ `object-fit: cover`, Canvas Resize, DPR, Orientation Change
+- ใช้ smoothing แบบ Lerp/Low-pass
+
+---
+
+# ส่วนที่ 10 AR Lifecycle และการป้องกันกล้องเปิดซ้ำ
+
+## 10.1 การเปิด AR
+`startARControls()` ต้อง:
+1. หาก `starting` ให้คืน Promise เดิม
+2. หาก `active` และ Stream ยัง live ให้คืน `true` โดยไม่เปิดกล้องใหม่
+3. หาก `stopping` ให้รอ Stop Promise
+4. เก็บโหมดเดิมไว้ก่อน
+5. โหลด MediaPipe ครั้งเดียว
+6. ปล่อย Stream เก่าที่ค้าง
+7. รอ 250-400 ms
+8. เรียก `getUserMedia()` โดยตรง
+9. เก็บ Stream ใน `arLifecycle.stream`
+10. ตั้ง `video.srcObject`
+11. รอ `loadedmetadata`
+12. เรียก `video.play()`
+13. เริ่ม Processing Loop เพียงหนึ่งชุด
+14. ตั้ง `status = active`
+15. กำหนด `gameState.controlMode = "ar"` หลังเปิดสำเร็จเท่านั้น
+
+Constraints แรก:
+```js
+{
+  audio: false,
+  video: {
+    facingMode: { ideal: "user" },
+    width: { ideal: 640 },
+    height: { ideal: 480 }
+  }
+}
+```
+หากล้มเหลวเพราะ Constraint ให้ลอง `{audio:false, video:true}` ได้อีกหนึ่งครั้งเท่านั้น
+
+## 10.2 Processing Loop
+- ใช้ `requestAnimationFrame`
+- ตรวจ `sessionToken`
+- ตรวจ `status === "active"`
+- ตรวจ `video.readyState >= 2`
+- เรียกตรวจจับเฉพาะเมื่อ `video.currentTime` เปลี่ยน
+- จำกัดอัตรา Inference เช่น 24-30 FPS ตามอุปกรณ์
+- ห้ามสร้าง Loop ซ้อน
+- จับ Error ต่อเฟรมโดยไม่ทำให้ Game Loop หยุด
+
+## 10.3 การปล่อยกล้อง
+`releaseCameraResources()` ต้อง:
+- เปลี่ยนสถานะเป็น `stopping`
+- เพิ่ม `sessionToken`
+- ยกเลิก Processing RAF
+- Stop และ Disable ทุก Track จากทุก Stream ที่เกี่ยวข้อง
+- ตั้ง Stream เป็น `null`
+- Pause Video
+- ตั้ง `srcObject = null`
+- ลบ `src` แล้วเรียก `load()`
+- รีเซ็ต Hand/Input/Gesture State
+- รอประมาณ 300 ms
+- เปลี่ยนสถานะเป็น `idle`
+
+## 10.4 การเปลี่ยนโหมดระหว่างเล่น
+- Pause ก่อนเปลี่ยน
+- Mouse ↔ Touch เปลี่ยนเฉพาะ Handler ไม่รีเซ็ตเวลา HP คะแนน และ State
+- เปลี่ยนไป AR: หากเปิดไม่สำเร็จ กลับโหมดเดิม
+- เปลี่ยนออกจาก AR: ต้องปล่อย Stream สมบูรณ์
+- Resume เฉพาะเมื่อผู้เล่นกดยืนยัน
+
+## 10.5 Error Handling กล้อง
+จัดการอย่างน้อย:
+- `NotAllowedError`
+- `NotFoundError`
+- `NotReadableError`
+- `OverconstrainedError`
+- `AbortError`
+- `SecurityError`
+
+ข้อความ `NotReadableError`:
+“ไม่สามารถเริ่มกล้องได้ กล้องอาจถูกใช้งานโดยโปรแกรม เว็บไซต์ หรือแท็บอื่น กรุณาปิด Camera, Zoom, Meet หรือแท็บอื่น แล้วลองใหม่”
+
+Retry ต้อง Disable ระหว่างดำเนินการและห้ามเปิดซ้ำซ้อน
+
+## 10.6 Page Visibility
+เมื่อหน้าเว็บถูกซ่อน:
+- Auto Pause Gameplay
+- Cancel Speech
+- หากนโยบายกำหนดให้หยุดกล้อง ให้ปล่อย Stream สมบูรณ์และต้องให้ผู้เล่นกดยืนยันเปิดใหม่
+- กลับมาแล้วห้าม Resume อัตโนมัติ
+
+---
+
+# ส่วนที่ 11 ระบบเสียงและเสียงบรรยาย
+
+## 11.1 Web Audio
+- เริ่ม AudioContext หลัง User Interaction
+- เสียง Click, Success, Error, Hit, Damage, Countdown, Victory
+- BGM ห้ามซ้อน
+- Pause ลด/หยุดเสียงตามกติกา
+- Oscillator/Node ต้อง Stop และ Disconnect
+- Browser ไม่รองรับแล้วเกมยังเล่นได้
+
+## 11.2 Speech Synthesis
+ใช้ฟังก์ชันกลาง `speakThai(text, options)`
+- `lang = "th-TH"`
+- ตรวจ `gameState.narrationEnabled`
+- `speechSynthesis.cancel()` ก่อนข้อความใหม่
+- Debounce/Cooldown 800-1,200 ms
+- ป้องกันข้อความเดิมซ้ำ
+- เปลี่ยนหน้าหรือออกด่านให้ Cancel
+- หากไม่มีเสียงไทย ใช้เสียงระบบหรือแสดงข้อความโดยเกมไม่หยุด
+
+### การแยกจากกล้อง
+`toggleSetting("narration")` ห้ามเรียก:
+- `startARControls()`
+- `stopARControls()`
+- `setControlMode()`
+- `stopAllInputSystems()`
+- `requestCameraStream()`
+- `showScreen()`
+
+ปิดเสียงบรรยายให้เรียกเฉพาะ `stopSpeech()` และบันทึก LocalStorage
+
+### เสียงต้อนรับ
+ข้อความ:
+“ยินดีต้อนรับ เข้าสู่เกม ฮันเตอร์ส ทู พอยต์ ไฟว์ หน่วยล่าท้าฝุ่น”
+- เล่นหนึ่งครั้งต่อการเข้าสู่ Start Screen
+- ไม่เล่นซ้ำจาก Resize หรือ Game Loop
+- หาก Autoplay ถูกบล็อก ให้รอ Pointer Interaction ครั้งแรกแล้วลบ Listener
+
+### เสียงการ์ดตัวละคร
+- Sky: “สกาย ฉายา สายโล่ เอ็น เก้าสิบห้า”
+- Zee: “ซี ฉายา จอมลุย”
+- Bubble: “บับเบิ้ล ฉายา บอทพิทักษ์ปอด”
+
+รองรับ `pointerenter`, `pointerdown`, `focus` โดยไม่ผูก Listener ซ้ำ
+
+---
+
+# ส่วนที่ 12 Asset Manifest และพื้นหลัง
+
+ใช้แหล่งข้อมูลกลางเพียงแห่งเดียว:
+```js
+const ASSETS = {
+  backgrounds: {
+    start: "Bg/Poster.png",
+    level1: "Bg/Yellow-Zone.png",
+    level2: "Bg/Monsters.png",
+    level3: "Bg/MegaBoss.png",
+    level4: "Bg/Healthy.png",
+    level5: "Bg/FoodBasket.png"
+  },
+  characters: {
+    sky: "Character/Sky.png",
+    zee: "Character/Zee.png",
+    bubble: "Character/Bubble.png",
+    drAir: "Character/Dr-Air.png",
+    yellowDust: "Character/Yellow-Dust-Demon.png",
+    redDust: "Character/Red-Dust-Demon.png",
+    lungDemon: "Character/Lung-Demon.png",
+    heartDemon: "Character/Heart-Demon.png",
+    brainDemon: "Character/Brain-Demon.png",
+    boss: "Character/MegaBoss.png"
+  },
+  items: {
+    n95: "Images/N95-masks.png",
+    clothMask: "Images/Cloth-mask.png",
+    handkerchief: "Images/Handkerchiefs.png",
+    hat: "Images/Hats.png",
+    glasses: "Images/Eyeglasses.png",
+    toy: "Images/Toys.png",
+    fashionMask: "Images/Fashion-masks.png",
+    basket: "Images/Basket.png"
+  },
+  foods: {
+    meat: "Food/Meat.png",
+    fish: "Food/Fish.png",
+    eggs: "Food/Eggs.png",
+    milk: "Food/Milk.png",
+    peanuts: "Food/Peanuts.png",
+    rice: "Food/Rice.png",
+    taro: "Food/Taro.png",
+    yam: "Food/Yam.png",
+    sugar: "Food/Sugar.png",
+    tomatoes: "Food/Tomatoes.png",
+    broccoli: "Food/Broccoli.png",
+    cabbage: "Food/Cabbage.png",
+    carrot: "Food/Carrot.png",
+    greenBeans: "Food/Green-beans.png",
+    orange: "Food/Orange.png",
+    apple: "Food/Apple.png",
+    watermelon: "Food/Watermelon.png",
+    banana: "Food/Banana.png",
+    guava: "Food/Guava.png",
+    palmOil: "Food/Palm-oil.png",
+    soybeanOil: "Food/Soybean-oil.png",
+    butter: "Food/Butter.png",
+    cheese: "Food/Cheese.png",
+    softDrinks: "Food/Soft-drinks.png",
+    candy: "Food/Candy.png",
+    potatoChips: "Food/Potato-chips.png",
+    friedFood: "Food/Fried-food.png",
+    desserts: "Food/Desserts.png"
+  }
+};
+```
+
+ข้อกำหนด:
+- Relative Path เท่านั้น
+- ตรวจตัวพิมพ์เล็ก/ใหญ่
+- ห้ามมีอักขระพิเศษซ่อนใน Path
+- โหลดครั้งเดียวและ Cache
+- Preloader ล้มเหลวแล้ว Progress ต้องเดินต่อ
+- ไม่โหลดภาพใหม่ทุก Frame
+- `<img>` เสียให้ซ่อนและแสดง Fallback
+- Background เป็น Visual Layer, `pointer-events:none`, ไม่กระทบ Canvas/Hitbox
+
+พื้นหลัง Gameplay ใช้ `cover` ได้ พร้อม Overlay ที่ไม่ทำให้วัตถุกลืน
+
+---
+
+# ส่วนที่ 13 ระบบคุณภาพอากาศจำลอง
+
+ใช้ 5 ระดับ:
+1. สีฟ้า - ดีมาก
+2. สีเขียว - ดี
+3. สีเหลือง - ปานกลาง
+4. สีส้ม - เริ่มมีผลกระทบต่อสุขภาพ
+5. สีแดง - มีผลกระทบต่อสุขภาพ
+
+แสดงสี + ชื่อ + ไอคอน + ข้อความ ห้ามใช้สีอย่างเดียว
+ค่าทั้งหมดในเกมเป็นข้อมูลจำลอง ต้องแสดงบนหน้าจอเดียวกันว่า:
+“ระดับสีและค่าฝุ่นในเกมเป็นข้อมูลจำลองเพื่อการเรียนรู้ ควรตรวจสอบข้อมูลคุณภาพอากาศจากหน่วยงานที่น่าเชื่อถือก่อนทำกิจกรรมกลางแจ้ง”
+
+ห้ามดึงค่าจริงหรือใช้ API ภายนอกในขอบเขตนี้
+
+---
+
+# ส่วนที่ 14 Gameplay HUD
+
+ซ้ายบน:
+- ชื่อและหมายเลขด่าน
+- AQI/สี/ไอคอน
+- ค่าจำลองพร้อมป้ายข้อมูลจำลอง
+- เวลา
+
+ขวาบน:
+- คะแนนรวมและคะแนนด่าน
+- HP และ HP Bar
+- ตัวละคร
+- Sound และ Pause
+
+ด้านล่าง:
+- คำแนะนำสั้น
+- Input/Gesture ปัจจุบัน
+- Progress
+- Skill/Cooldown
+- Badge โหมด
+
+เมื่อเหลือน้อยกว่า 10 วินาที:
+- Countdown Beep
+- Visual Warning ที่ไม่กะพริบรุนแรง
+- Reduced Motion ปิดการกระพริบ
+
+---
+
+# ส่วนที่ 15 รายละเอียดด่าน
+
+## ด่าน 1: ฝุ่นเริ่มคุกคาม
+- English: Dust Alert - Yellow Zone
+- เวลา 20 วินาที
+- พื้นหลัง `Bg/Yellow-Zone.png`
+- เป้าหมาย: เลือกอุปกรณ์ช่วยลดการสูดฝุ่นที่เหมาะสม
+
+ไอเท็ม: N95, หน้ากากผ้า, ผ้าเช็ดหน้า, หมวก, แว่นตา, ของเล่น, หน้ากากแฟชั่น
+
+AR:
+- Landmark 8 เป็น Cursor
+- Dwell Selection ประมาณ 1 วินาที
+- แสดง Progress Ring
+- ไม่ใช้ Palm Center และไม่บังคับ Open Hand
+
+Mouse: คลิกหรือ Hover/Dwell
+Touch: แตะ
+
+ถูก - N95:
+- +200 คะแนน
+- ผ่านทันที
+- ข้อความ: “ยอดเยี่ยม! หน้ากากกรองอนุภาคที่ได้มาตรฐานและสวมกระชับ เช่น N95 สามารถช่วยลดการสูดฝุ่นละอองขนาดเล็กได้”
+
+ผิด:
+- หักเวลา 2 วินาที
+- ไม่จบด่าน
+- Input Cooldown
+
+ดาว:
+- 3 ดาว: ไม่ผิดและเหลือ >=14 วินาที
+- 2 ดาว: เหลือ >=7 วินาที
+- 1 ดาว: ผ่านและเหลือ <7 วินาที
+
+## ด่าน 2: ปีศาจฝุ่นจิ๋ว
+- English: Tiny Dust Monsters
+- เวลา 30 วินาที
+- พื้นหลัง `Bg/Monsters.png`
+- เป้าหมาย: เอาชีวิตรอดและเรียนรู้ผลกระทบต่อสุขภาพ
+
+ศัตรูอย่างน้อย 4 ชนิดจาก Asset ที่กำหนด
+AR:
+- Palm Center จาก 0,5,9,13,17
+- Palm Cursor ชน Hitbox = โจมตี
+- Hit Cooldown 250-400 ms
+- ห้ามใช้ Point ยิงต่อเนื่อง
+
+Mouse: คลิกศัตรู
+Touch: แตะศัตรู
+
+คะแนน:
+- เหลือง +10
+- แดง +30
+- ปีศาจอวัยวะ +50
+
+ศัตรูถึงผู้เล่น:
+- Damage 15
+- Invulnerability สั้น
+
+ผ่าน: หมดเวลาและ HP > 0
+ไม่ผ่าน: HP = 0
+ดาว:
+- 3 ดาว: HP >=70% และกำจัด >=12
+- 2 ดาว: HP >=40%
+- 1 ดาว: HP >0
+
+## ด่าน 3: ราชาฝุ่นจิ๋ว
+- English: PM 2.5 Mega Boss
+- เวลา 45 วินาที
+- Boss HP 30
+- พื้นหลัง `Bg/MegaBoss.png`
+
+ระบบใช้ Hand Swipe + Cursor Dodge เท่านั้น
+ห้ามกล่าวอ้างว่าตรวจจับลำตัวหรือโยกตัว
+
+โจมตี:
+- Palm Cursor ปัดผ่าน Boss Hitbox
+- ตรวจความเร็ว X + ระยะ + ทิศทาง + Collision
+- Damage 3
+- Swipe Cooldown
+- ค้าง Cursor บนบอสห้าม Damage
+
+หลบ:
+- เลื่อน Cursor หลีก Projectile
+- ชนแล้ว Damage 50 + Invulnerability
+
+ผ่าน: Boss HP = 0 และ Player HP > 0 ก่อนหมดเวลา
+โบนัส: +1,000
+ไม่ผ่าน: หมดเวลาโดย Boss HP >0 หรือ Player HP =0
+
+ดาว:
+- 3 ดาว: เหลือ >=20 วินาที และ HP >=50%
+- 2 ดาว: เหลือ >=8 วินาที หรือ HP >=30%
+- 1 ดาว: ชนะบอส
+
+## ด่าน 4: ฝึกหายใจ ดูแลสุขภาพ
+- English: Healthy Breathing Training
+- เวลา 20 วินาที
+- พื้นหลัง `Bg/Healthy.png`
+- เป้าหมาย: กิจกรรมผ่อนคลายและเรียนรู้การดูแลสุขภาพทั่วไป
+
+ข้อจำกัด:
+- ไม่ตรวจการหายใจจริง
+- ไม่วัดปอด
+- ไม่ตรวจลำตัว/กางแขน
+- ไม่วินิจฉัยสุขภาพ
+
+ข้อความ:
+- นั่งหรือยืนในท่าที่สบาย
+- ผ่อนคลายร่างกาย
+- หายใจตามปกติอย่างช้า ๆ
+- วางมือค้างในวงเป้าหมาย
+- หากรู้สึกไม่สบาย เวียนศีรษะ หรือหายใจลำบาก ให้หยุดกิจกรรม
+
+AR:
+- Open Hand + Palm Center อยู่ในวง
+- สะสม 5 วินาที
+- ออกจากวงให้ Pause Progress ไม่รีเซ็ตทันที
+- มี Tolerance
+
+Mouse/Touch:
+- กดค้าง 5 วินาที
+
+ผ่าน: Progress 5 วินาทีภายใน 20 วินาที
+รางวัล +300
+ดาว:
+- 3 ดาว: สำเร็จ <=8 วินาที และหยุดไม่เกิน 1 ครั้ง
+- 2 ดาว: <=14 วินาที
+- 1 ดาว: ภายใน 20 วินาที
+
+ข้อความความปลอดภัย:
+“กิจกรรมนี้เป็นการผ่อนคลายเบื้องต้น ไม่ใช่คำแนะนำ การวินิจฉัย หรือการรักษาทางการแพทย์”
+
+## ด่าน 5: อาหารดีมีประโยชน์
+- English: Healthy Food Basket
+- เวลา 45 วินาที
+- พื้นหลัง `Bg/FoodBasket.png`
+- เป้าหมาย: เลือกอาหารที่มีประโยชน์และเก็บครบทั้ง 5 หมู่
+- ต้องเก็บจากแต่ละหมู่อย่างน้อย 1 ชิ้น
+
+### ข้อมูลอาหารกลาง
+ใช้ `LEVEL5_FOODS` ชุดเดียว แต่ละรายการมี:
+```js
+{id,name,groupId,groupName,category,asset,fallback}
+```
+
+### หมู่ 1 โปรตีน
+เนื้อ, ปลา, ไข่, นม, ถั่วลิสง
+
+### หมู่ 2 ข้าว-แป้งและอาหารให้พลังงาน
+ข้าว, เผือก, มันเทศ
+`น้ำตาล` อาจแสดงเป็นตัวอย่างในกลุ่มให้พลังงานได้ แต่ต้องติดป้าย **“ควรรับประทานแต่น้อย”** และไม่นับเป็นตัวเลือกหลักสำหรับผ่านด่าน เพื่อไม่ส่งเสริมการเลือกน้ำตาล
+
+### หมู่ 3 ผัก - วิตามินและแร่ธาตุ
+มะเขือเทศ, บรอกโคลี, กะหล่ำปลี, แครอท, ถั่วฝักยาว
+
+### หมู่ 4 ผลไม้ - วิตามินและแร่ธาตุ
+ส้ม, แอปเปิล, แตงโม, กล้วย, ฝรั่ง
+
+### หมู่ 5 ไขมัน
+น้ำมันปาล์ม, น้ำมันถั่วเหลือง, เนย, ชีส
+แสดงข้อความ “ควรรับประทานในปริมาณเหมาะสม/แต่น้อย”
+
+### อาหารที่ควรรับประทานแต่น้อย
+น้ำอัดลม, ลูกอม, มันฝรั่งทอด, อาหารทอด, ขนมหวาน
+ห้ามเรียกว่า “อาหารอันตราย” หรือ “อาหารต้องห้าม”
+
+### State เฉพาะด่าน
+```js
+const level5State = {
+  foods: [],
+  basket: null,
+  draggingFood: null,
+  collectedGroups: new Set(),
+  collectedFoodIds: new Set(),
+  correctCount: 0,
+  errorCount: 0,
+  score: 0,
+  spawnQueue: [],
+  feedbackText: "",
+  feedbackTimer: 0
+};
+```
+Restart ต้องสร้าง Set ใหม่
+
+### การสุ่ม
+- เริ่มต้นต้องมีอาหารที่ทำให้ผ่านได้ครบทุกหมู่
+- มีอาหารควรรับประทานแต่น้อยผสม
+- แสดงประมาณ 8-12 ชิ้นตามหน้าจอ
+- ไม่ทับ HUD/ตะกร้า/กันเองมากเกินไป
+- เมื่อเอาออก ให้ Spawn ใหม่โดยเพิ่มน้ำหนักหมู่ที่ยังขาด
+
+### Progress
+แสดง 5 ช่องพร้อม ○/✓ และข้อความ
+Progress เพิ่มเฉพาะหมู่ใหม่
+หมู่เดิมยังได้คะแนนแต่ Progress ไม่เพิ่ม
+Progress ห้ามเกิน 5/5
+
+### ตะกร้า
+- ด้านล่าง Gameplay
+- Asset `Images/Basket.png` หรือ 🧺
+- มี Hitbox/Glow/ข้อความ “วางอาหารที่นี่”
+- รองรับ Resize/Orientation
+
+### AR ติดตามนิ้ว 5 นิ้ว
+แสดงจุดปลายนิ้ว:
+- 4 โป้ง
+- 8 ชี้
+- 12 กลาง
+- 16 นาง
+- 20 ก้อย
+
+ใช้เพื่อ Feedback และ Hand Stability เท่านั้น ห้ามกล่าวอ้างว่าวัดแรงจับ
+คำนวณ Palm Center จาก 0,5,9,13,17
+Hand Scale จากระยะ 5-17 หรือ 0-9
+
+### Pinch
+- ใช้ระยะ Landmark 4 กับ 8 หารด้วย Hand Scale
+- มี `PINCH_THRESHOLD` และ `RELEASE_THRESHOLD` โดย Release มากกว่า Pinch
+- Debounce 2-4 เฟรม
+- Pinch Cursor = จุดกึ่งกลาง 4 และ 8
+- Smoothing ด้วย Lerp ประมาณ 0.25
+
+ลำดับจับ:
+1. ตรวจครบ 21 Landmark
+2. คำนวณ 5 fingertips, Palm Center, Hand Scale
+3. คำนวณ Pinch Cursor
+4. Pinch บน Food Hitbox
+5. Lock `draggingFood`
+6. ลากตาม Cursor
+7. Release
+8. หากใน Basket ตรวจคำตอบ มิฉะนั้นคืนตำแหน่ง
+
+Mouse: Down-Hold-Drag-Up
+Touch: Pointer Down-Drag-Up พร้อม Pointer Capture
+
+### คะแนน
+อาหารมีประโยชน์:
+- +100
+- แสดง `+100`
+- หมู่ใหม่เพิ่ม Progress
+
+อาหารควรรับประทานแต่น้อย:
+- -30
+- คะแนนด่านไม่ต่ำกว่า 0
+- แสดง `-30 ควรรับประทานแต่น้อย`
+
+ป้องกัน Food ID ถูกนับซ้ำ
+
+ผ่าน: `collectedGroups.size === 5` ก่อนหมดเวลา
+ไม่ผ่าน: เวลา 0 และน้อยกว่า 5 หมู่
+ดาว:
+- 3 ดาว: ครบ 5 หมู่ ไม่ผิด และเหลือ >=15 วินาที
+- 2 ดาว: ครบ 5 หมู่ ผิด <=1
+- 1 ดาว: ครบ 5 หมู่ แต่ผิด >=2
+
+ข้อความ:
+“ข้อมูลอาหารในเกมจัดทำขึ้นเพื่อการเรียนรู้เรื่องอาหาร 5 หมู่ ควรรับประทานอาหารให้หลากหลายและในสัดส่วนที่เหมาะสม อาหารไม่สามารถป้องกันหรือรักษาผลกระทบจาก PM 2.5 ได้โดยตรง”
+
+---
+
+# ส่วนที่ 16 คะแนน HP ดาว และ Skill
+
+## คะแนน
+- Floating Score
+- คะแนนด่านไม่ต่ำกว่า 0 เมื่อกติกากำหนด
+- Best Score ต่อด่าน
+- คะแนนรวม = ผลรวม Best Score 5 ด่าน
+- Finish Level ต้องบันทึกครั้งเดียว
+
+## HP
+- Clamp 0 ถึง Max HP
+- Invulnerability ป้องกัน Damage ซ้ำ
+- ตรวจ HP =0 ก่อนเงื่อนไขผ่านในเฟรมเดียวกัน เว้นแต่ด่านกำหนดชัดเจน
+
+## ดาว
+เก็บ Best Stars ต่อด่าน และ Total Stars จากค่าดีที่สุด
+
+## Skill
+- Click/Touch เท่านั้น ไม่ต้อง Gesture พิเศษ
+- Cooldown ใช้ Game Time และหยุดเมื่อ Pause
+- ด่านที่ใช้ไม่ได้ต้องแสดง “ไม่จำเป็นในภารกิจนี้”
+
+---
+
+# ส่วนที่ 17 Result, Mission Complete และ History
+
+## Result Screen
+แสดง:
+- Dr.Air/Fallback
+- ผ่านหรือยังไม่สำเร็จ
+- คะแนนด่านและรวม
+- HP, เวลา, ดาว
+- สถิติเฉพาะด่าน
+- ความรู้/ข้อควรปฏิบัติ
+- Retry, Map, Next
+
+Result ต้องแสดงก่อนด่านถัดไป
+ไม่ผ่านห้ามปลดล็อกด่านถัดไป
+
+## Mission Complete
+เกิดเมื่อผ่านครบ 5 ด่านจริง
+แสดงคะแนนรวม ดาวรวม เหรียญ และข้อความ:
+- ตรวจข้อมูลคุณภาพอากาศ
+- สวมหน้ากากเหมาะสมและกระชับ
+- ลดกิจกรรมกลางแจ้งเมื่อค่าฝุ่นสูง
+- ดูแลสุขภาพอย่างสม่ำเสมอ
+- เกมไม่ใช่เครื่องมือวินิจฉัย
+
+## LocalStorage
+ใช้ key แบบมี namespace เช่น:
+- `hunters25_state_v1`
+- `hunters25_settings_v1`
+- `hunters25_history_v1`
+
+ต้องมี:
+- schemaVersion
+- validation
+- default เมื่อ JSON เสีย
+- try/catch
+- ทำงานใน Session ต่อได้เมื่อบันทึกไม่ได้
+
+History จำกัด 20 รายการ เรียงคะแนนมากไปน้อย และล้างด้วย Custom Modal
+
+---
+
+# ส่วนที่ 18 Responsive, Accessibility และ UX
+
+## Responsive
+- รองรับ Desktop, Notebook, Tablet, iPad, Mobile
+- Landscape และ Portrait
+- Safe Area Insets
+- DPR ไม่เกิน 2
+- Resize Canvas อย่างถูกต้อง
+- Gameplay Coordinate ไม่เปลี่ยนเพราะ Background
+
+## Accessibility
+- ปุ่มสัมผัสอย่างน้อยประมาณ 44x44 CSS px
+- Keyboard Focus ชัดเจน
+- Enter/Space ใช้งานการ์ดและปุ่ม
+- Escape ปิด Modal/Pause ตามบริบท
+- `aria-label`, `role`, Live Region สำหรับ Toast/ผลลัพธ์
+- ไม่ใช้สีอย่างเดียว
+- Reduced Motion ปิด Pulse, Shake, Background Animation ที่ไม่จำเป็น
+- หลีกเลี่ยง Flash ถี่
+- Mouse/Touch เป็น Fallback เต็มรูปแบบ
+
+## ผู้เรียนที่มีความต้องการจำเป็นพิเศษ
+- ข้อความสั้นและชัด
+- คำแนะนำทีละขั้น
+- Dwell Selection และ Hitbox ใหญ่
+- Tolerance สำหรับมือสั่น
+- ไม่มีการบังคับท่าทางที่ซับซ้อนเกินไป
+- ผู้เล่นเปลี่ยนโหมดได้โดยไม่เสียความก้าวหน้าในด่าน
+
+---
+
+# ส่วนที่ 19 Performance และ Resource Cleanup
+
+- Game Loop หลักหนึ่งชุด
+- ใช้ Delta Time
+- Timer อิง Game Time ไม่สร้าง Interval จำนวนมาก
+- Object Pool สำหรับ Particle/Projectile ตามความเหมาะสม
+- Cache DOM
+- ไม่สร้าง Object/Gradient/Image ทุก Frame
+- ปรับลด Particle เมื่อ FPS ต่ำ
+- Cancel RAF/Timeout/Interval ที่ไม่ใช้
+- ลบ Event Listener หรือใช้ AbortController/flag ป้องกันผูกซ้ำ
+- Release Pointer Capture
+- Reset Drag State
+- Cancel Speech
+- Stop/Disconnect Audio Node
+- หยุด AR เฉพาะเหตุที่ต้องหยุดจริง ไม่หยุดเมื่อเปิด Settings หรือ Toggle Narration
+
+`cleanupCurrentScreen()` ห้ามปิดกล้องทุกครั้งโดยอัตโนมัติ หากผู้เล่นยังใช้ AR ระหว่าง AR Check, Map, Gameplay หรือ Modal ที่เกี่ยวข้อง
+
+---
+
+# ส่วนที่ 20 ความถูกต้องด้านสุขภาพและเนื้อหา
+
+ห้ามกล่าวอ้างว่า:
+- เกมวินิจฉัยโรคหรือใช้แทนแพทย์
+- หน้ากากป้องกันได้ 100%
+- การฝึกหายใจรักษาโรคหรือเพิ่มภูมิคุ้มกันต่อฝุ่น
+- อาหาร วิตามิน หรืออาหารเสริมป้องกัน/ทำลาย PM 2.5
+- ผู้ผ่านด่านมีปอดแข็งแรงจริง
+- ระบบตรวจวัดการหายใจหรือแรงจับจริง
+
+ใช้ถ้อยคำ:
+- “ช่วยลดการสัมผัส”
+- “สามารถช่วยลดการสูดฝุ่นเมื่อเลือกชนิดที่เหมาะสมและสวมกระชับ”
+- “ควรตรวจสอบข้อมูลคุณภาพอากาศ”
+- “ควรลดกิจกรรมกลางแจ้งเมื่อค่าฝุ่นสูง”
+- “รับประทานอาหารหลากหลายครบหมู่ในสัดส่วนเหมาะสม”
+
+---
+
+# ส่วนที่ 21 โครงสร้างโค้ดและฟังก์ชันสำคัญ
+
+แบ่ง Comment อย่างน้อย:
+1. HTML Screens
+2. Global/Responsive/Accessibility Styles
+3. Config and Asset Manifest
+4. DOM Cache
+5. Game State/Input State/Level State
+6. Storage
+7. Asset Manager
+8. Audio/Speech
+9. Screen Manager
+10. Control Mode Manager
+11. Mouse Input
+12. Touch Input
+13. MediaPipe Loader
+14. AR Lifecycle
+15. Hand Landmark Processing
+16. Gesture Detection
+17. Coordinate Mapping
+18. Canvas Renderer
+19. Level Manager
+20. Level 1-5
+21. Skill
+22. HUD
+23. Pause/Result/History
+24. Cleanup/Error Handling
+25. Initialization
+
+ฟังก์ชันอย่างน้อย:
+- `initGame()`
+- `showScreen()`
+- `startLevel()`, `restartLevel()`, `finishLevel()`
+- `pauseGame()`, `resumeGame()`, `quitToMap()`
+- `selectControlMode()`, `confirmControlMode()`, `setControlMode()`
+- `startMouseControls()`, `stopMouseControls()`
+- `startTouchControls()`, `stopTouchControls()`
+- `loadMediaPipeOnce()`
+- `requestCameraStream()`
+- `startARControls()`, `startARSession()`, `stopARControls()`
+- `releaseCameraResources()`, `isCameraStreamAlive()`
+- `processARFrame()` หรือชื่อเทียบเท่า
+- `processHandResults()`
+- `mapVideoPointToCanvas()`
+- `detectGesture()`, `updateInputState()`
+- `updateGame()`, `renderGame()`, `updateHUD()`
+- `useSkill()`, `updateSkill()`
+- `loadProgress()`, `saveProgress()`, `saveHistory()`, `clearHistory()`
+- `speakThai()`, `stopSpeech()`, `toggleSetting()`
+- `cleanupCurrentLevel()`, `cleanupCurrentScreen()`, `stopAllTimers()`
+
+ทุกฟังก์ชันต้องมี Logic จริง
+
+---
+
+# ส่วนที่ 22 การตรวจสอบก่อนแก้และ Acceptance Criteria
+
+## 22.1 เมื่อมีโค้ดเดิม ต้องรายงานก่อนแก้
+ตารางแต่ละปัญหาต้องมี:
+- รหัส
+- ระดับ Critical/High/Medium/Low
+- ข้อกำหนด
+- ตำแหน่งโค้ด
+- สถานะ: ผ่าน/ไม่ผ่าน/ผ่านบางส่วน/ยืนยันไม่ได้/ไม่มีในโค้ด/ขัดแย้ง
+- หลักฐาน
+- ผลกระทบ
+- แนวทางแก้
+
+ลำดับแก้:
+1. Syntax/Reference/HTML ID
+2. Game Flow/State/Input
+3. Timer/Game Loop
+4. AR Lifecycle/Camera/MediaPipe
+5. Cleanup
+6. Gameplay 1-5
+7. Score/HP/Stars/Progress
+8. Storage
+9. Speech/Audio
+10. Assets/Background
+11. Accessibility/Responsive/Performance
+12. P2 Effects
+
+## 22.2 Static Acceptance Criteria
+
+### HTML/CSS
+- หน้าจอและ Modal ครบ
+- ID ไม่ซ้ำ
+- JS เรียก Element ที่มีจริง
+- z-index ถูก: Background < Video < Canvas < HUD < Toast < Modal
+- Background `pointer-events:none`
+- Start Poster เป็น contain
+- Level 1 เป็น Yellow-Zone
+- Safe Area และ Orientation รองรับ
+
+### JavaScript
+- ไม่มี SyntaxError/ReferenceError
+- ไม่มีฟังก์ชันชื่อซ้ำโดยไม่ตั้งใจ
+- ไม่มี Handler เรียกฟังก์ชันที่ไม่มี
+- ไม่มี Null Method Call ที่คาดเห็นได้
+- ไม่มี Timer/Game Loop/Event Listener ซ้ำ
+- `finishLevel()` ทำงานครั้งเดียว
+
+### Control Modes
+- Mouse/Touch ครบ 5 ด่าน
+- AR ขอสิทธิ์หลังยืนยันเท่านั้น
+- MediaPipe ไม่โหลดใน Mouse/Touch
+- เปลี่ยนโหมดไม่รีเซ็ต State
+- AR Fail กลับโหมดเดิม
+
+### Camera/AR
+- ใช้ `getUserMedia()` โดยตรง
+- ไม่ใช้ `new Camera()`
+- Stream ไม่เปิดซ้ำ
+- มี Promise Lock
+- Stop Track ครบ
+- Processing Loop ไม่ซ้อน
+- `detectForVideo()` ไม่เรียกซ้ำเฟรมเดิม
+- Error มี Modal/Fallback
+
+### Speech
+- Narration ไม่เปิด/ปิดกล้อง
+- Welcome เล่นครั้งเดียว
+- Hero Narration ไม่ซ้อน
+- เปลี่ยนหน้า Cancel
+
+### Gameplay
+- ทุกด่านเริ่ม ผ่าน และไม่ผ่านได้
+- ด่าน 1 N95 + Yellow Zone
+- ด่าน 2 Palm Hit
+- ด่าน 3 Hand Swipe ไม่กล่าวอ้าง Body Tracking
+- ด่าน 4 ไม่ตรวจลมหายใจและไม่ให้กลั้นหายใจ
+- ด่าน 5 เวลา 45 วินาที ครบ 5 หมู่ และ 5 fingertips
+- Progress/Score/HP/Stars ถูกต้อง
+
+### Storage
+- Schema version
+- JSON เสียใช้ Default
+- Best Score ไม่สะสมไม่จำกัด
+- History <=20
+
+### Health
+- ไม่มีคำกล่าวอ้างทางการแพทย์เกินจริง
+- ค่าฝุ่นระบุข้อมูลจำลอง
+- อาหารไม่ถูกกล่าวอ้างว่าป้องกันฝุ่น
+
+## 22.3 สิ่งที่ต้องระบุว่า “ยืนยันไม่ได้” หากไม่ได้ทดสอบจริง
+- กล้องเปิดบน Chrome/Edge/Safari/iOS/Android จริงหรือไม่
+- การขอ Permission และ NotReadableError บนอุปกรณ์จริง
+- ความแม่นยำ Gesture ในสภาพแสงต่างกัน
+- ความลื่นไหล FPS บนอุปกรณ์ต่ำ
+- เสียงไทยที่ติดตั้งในระบบ
+- Fullscreen/Vibration ตาม Browser
+- Case-sensitive Asset บน GitHub Pages หากไม่ได้ตรวจ Repository จริง
+
+## 22.4 Test Matrix ที่ต้องรายงาน
+อย่างน้อย:
+- Desktop Chrome: Mouse, AR
+- Desktop Edge: Mouse, AR
+- Android Chrome: Touch, AR
+- iPad/iPhone Safari: Touch, AR หากรองรับ
+- file://: Mouse/Touch และ AR Disabled
+- GitHub Pages HTTPS: ทั้ง 3 โหมด
+- Portrait/Landscape
+- Camera denied/busy/not found
+- Asset missing
+- LocalStorage blocked/corrupt
+- Reduced Motion
+
+---
+
+# ส่วนที่ 23 รูปแบบการส่งมอบโค้ด
+
+เมื่อคำสั่งขั้นนั้นระบุให้ส่งโค้ด:
+1. ตอบด้วย Code Block ภาษา `html` เพียง Block เดียว
+2. ไม่มีคำอธิบายนอก Code Block
+3. โค้ดครบทั้งไฟล์ `index.html`
+4. ห้าม TODO/Pseudocode/ตัดโค้ด
+5. พร้อมคัดลอกและใช้งานผ่าน GitHub Pages
+6. Mouse/Touch ต้องเล่นได้แม้ AR/CDN/กล้องล้มเหลว
+
+เมื่อคำสั่งขั้นนั้นระบุให้ “ตรวจสอบก่อนแก้” ให้ส่งรายงานก่อน และห้ามส่งโค้ดแก้จนกว่าจะจบส่วนรายงานตามรูปแบบที่กำหนด
+
+---
+
+# ส่วนที่ 24 แหล่งอ้างอิงที่ใช้ตรวจแก้ข้อกำหนด
+
+- กรมควบคุมมลพิษ: ดัชนีคุณภาพอากาศประเทศไทยและ Air4Thai
+- กรมควบคุมโรค: แนวทางป้องกันตนเองจาก PM 2.5 และการใช้หน้ากาก
+- กรมอนามัย: การรับประทานอาหารครบ 5 หมู่และกินหวาน มัน เค็มแต่น้อย
+- World Health Organization: ผลกระทบของมลพิษทางอากาศต่อสุขภาพ
+- Google AI Edge: MediaPipe Hand Landmarker for Web
+- MDN Web Docs: MediaDevices/getUserMedia และ SpeechSynthesis

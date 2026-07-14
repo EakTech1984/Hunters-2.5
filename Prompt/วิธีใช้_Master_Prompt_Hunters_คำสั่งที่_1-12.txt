@@ -1,0 +1,189 @@
+# วิธีใช้ Master Prompt: Hunters 2.5 ให้ได้ผลจริง
+## ลำดับคำสั่งที่ 1-12
+
+ไม่ควรส่ง Master Prompt ทั้งฉบับแล้วสั่งว่า “สร้างให้เสร็จทั้งหมด” เพียงครั้งเดียว เพราะโค้ดมีระบบเกม กล้อง AR เสียง สื่อ และ 5 ด่าน ควรส่ง Master Prompt เป็นเอกสารอ้างอิงก่อน จากนั้นใช้คำสั่งตามลำดับดังนี้
+
+---
+
+## คำสั่งที่ 1: วิเคราะห์สถาปัตยกรรมก่อนเขียนโค้ด
+อ่าน Master Prompt ทั้งหมด แต่ยังไม่ต้องเขียนโค้ด ให้สรุป:
+- Game State และ Level State
+- Screen Flow
+- Input Abstraction
+- Asset Manifest
+- LocalStorage Schema
+- AR Lifecycle
+- ฟังก์ชันหลัก
+- ความเสี่ยงและข้อที่ต้องทดสอบบนอุปกรณ์จริง
+
+ผลลัพธ์เป็นรายงาน ไม่ส่ง `index.html`
+
+---
+
+## คำสั่งที่ 2: สร้าง P0 ด้วย Mouse และ Touch
+สร้าง `index.html` เวอร์ชัน P0 ที่:
+- เล่นได้ครบ 5 ด่านด้วย Mouse และ Touch
+- มี Loading, Start, Setup, Character, Control Mode, Map, Result, Complete
+- มี Score, HP, Timer, Stars, Pause, Restart, Unlock, LocalStorage
+- ใช้ Asset Manifest และ Fallback
+- ยังไม่เพิ่ม MediaPipe, Speech, Skill, Leaderboard และ P2
+
+ตอบด้วย HTML Code Block เดียว
+
+---
+
+## คำสั่งที่ 3: ตรวจและซ่อม P0
+อ่าน `index.html` ทั้งไฟล์ ตรวจและแก้:
+- SyntaxError/ReferenceError
+- HTML ID/Function ที่ไม่มี
+- Event Listener/Timer/Game Loop ซ้ำ
+- Game Flow และ State
+- เงื่อนไขผ่าน/ไม่ผ่านทั้ง 5 ด่าน
+- Score/HP/Stars/Unlock/Restart/Pause
+- Asset Path/Fallback
+
+ก่อนแก้ให้รายงานปัญหาแบบตาราง แล้วส่งโค้ดที่แก้ครบทั้งไฟล์
+
+---
+
+## คำสั่งที่ 4: เพิ่ม MediaPipe Hand Landmarker และ AR
+เพิ่มโหมด AR โดย:
+- ใช้ MediaPipe Tasks Vision เวอร์ชันคงที่ตาม Master Prompt
+- Dynamic import หลังผู้เล่นยืนยัน AR
+- ใช้ Input State กลาง ไม่เปลี่ยน Logic Mouse/Touch
+- เพิ่ม AR Camera Check
+- ใช้ `getUserMedia()` โดยตรง
+- มี `mapVideoPointToCanvas()`
+- รองรับ Gesture ของแต่ละด่าน
+- มี Fallback เมื่อกล้อง/CDN ล้มเหลว
+
+ตอบด้วย HTML Code Block เดียว
+
+---
+
+## คำสั่งที่ 5: เพิ่ม Skill, Audio, Speech และ Leaderboard
+เพิ่ม:
+- Skill ของ Sky, Zee, Bubble
+- Web Audio
+- Speech Synthesis ภาษาไทย
+- Welcome Narration
+- Hero Card Narration
+- Leaderboard/History
+- เปลี่ยนโหมดระหว่างเล่น
+
+ข้อสำคัญ: ระบบเสียงบรรยายต้องไม่เปิด ปิด หรือรีสตาร์ตกล้อง
+
+---
+
+## คำสั่งที่ 6: ตรวจสอบระบบทั้งหมดรอบแรก
+ตรวจโค้ดทั้งไฟล์ตาม Acceptance Criteria ของ Master Prompt และรายงาน:
+- ผ่าน
+- ไม่ผ่าน
+- ผ่านบางส่วน
+- ยืนยันไม่ได้
+
+แก้ Critical และ High ก่อน จากนั้นส่ง `index.html` ฉบับเต็ม
+
+---
+
+## คำสั่งที่ 7: ตรวจเสียงบรรยายและพื้นหลัง
+ตรวจและแก้:
+- Welcome Narration หนึ่งครั้งต่อ Start Screen
+- Hero Narration ไม่ซ้อนและ Listener ไม่ซ้ำ
+- Background Start 2 ชั้น: Blur Fill + Poster Contain
+- Background ด่าน 1-5 ตาม Asset Manifest
+- Overlay, z-index, pointer-events, Fallback
+- Reduced Motion
+
+ห้ามเปลี่ยน Gameplay
+
+---
+
+## คำสั่งที่ 8: ตรวจ AR Lifecycle และ NotReadableError
+ตรวจและแก้เฉพาะ:
+- Promise Lock
+- `arLifecycle.status`
+- `getUserMedia()` โดยตรง
+- เปิดกล้องไม่ซ้ำ
+- Processing Loop ไม่ซ้อน
+- Stop Tracks ครบ
+- Retry ไม่ซ้อน
+- NotReadableError และ Error Types
+- Page Visibility
+- Narration ไม่แตะกล้อง
+
+ห้ามเปลี่ยนกติกาด่าน
+
+---
+
+## คำสั่งที่ 9: ตรวจด่าน 5 แบบครบ 5 หมู่และนิ้ว 5 นิ้ว
+ตรวจและแก้:
+- เวลา 45 วินาที
+- `LEVEL5_FOODS` กลาง
+- สุ่มให้ผ่านได้ครบ 5 หมู่
+- Progress `collectedGroups.size`
+- ตะกร้าและ Drag/Drop
+- Mouse/Touch/AR
+- 5 fingertips
+- Pinch Hysteresis + Debounce
+- คะแนนและดาว
+- ถ้อยคำสุขภาพถูกต้อง
+
+ห้ามแก้ Gameplay ด่าน 1-4 หรือ AR Lifecycle
+
+---
+
+## คำสั่งที่ 10: Audit ทั้งไฟล์ก่อนแก้
+อ่านโค้ดตั้งแต่ต้นถึงท้าย แล้วจัดทำรายงานแบบตาราง:
+- Critical/High/Medium/Low
+- ข้อกำหนด
+- ตำแหน่ง
+- หลักฐาน
+- ผลกระทบ
+- แนวทางแก้
+
+ต้องมี Test Matrix และรายการ “ยืนยันไม่ได้” ก่อนแก้โค้ด
+จากนั้นแก้ตามลำดับความสำคัญและส่งโค้ดฉบับเต็ม
+
+---
+
+## คำสั่งที่ 11: ตรวจ Start Poster และพื้นหลังด่าน 1
+ตรวจเฉพาะ:
+- `Bg/Poster.png` ชั้นหน้าใช้ `contain`
+- Fill ชั้นหลังใช้ Blur + Cover
+- Safe Area/Portrait/Landscape
+- Poster ไม่ตัดข้อความ
+- `Bg/Yellow-Zone.png` เป็นพื้นหลังด่าน 1
+- Path อยู่ใน Asset Manifest เพียงจุดเดียว
+- Background ไม่กระทบ Hitbox/Canvas/Input
+
+ห้ามเปลี่ยน Gameplay, AR, Score, HP, Timer
+
+---
+
+## คำสั่งที่ 12: Final Verification ก่อนเผยแพร่ GitHub Pages
+ตรวจโค้ดฉบับสุดท้ายตาม Master Prompt ทั้งหมด โดย:
+1. Static Analysis ทั้งไฟล์
+2. ตรวจ Asset Manifest และ Case Sensitivity
+3. ตรวจ Mouse/Touch ทุกด่าน
+4. ตรวจ AR Lifecycle จากโค้ด
+5. ตรวจ Speech/Audio/Cleanup
+6. ตรวจ Health Wording
+7. จัด Test Matrix สำหรับอุปกรณ์จริง
+8. ระบุสิ่งที่ยังยืนยันไม่ได้อย่างตรงไปตรงมา
+9. แก้เฉพาะข้อที่ยืนยันจากโค้ดได้
+10. ส่ง `index.html` ฉบับเต็ม ไม่มี TODO/Pseudocode
+
+หลังจากนั้นให้นำโฟลเดอร์ทั้งหมดขึ้น GitHub Pages และทดสอบกล้องผ่าน HTTPS บนอุปกรณ์จริง
+
+---
+
+# วิธีส่งในแต่ละรอบ
+
+1. แนบ Master Prompt หรือระบุว่าให้ยึด Master Prompt V8.0
+2. แนบ `index.html` เวอร์ชันล่าสุด
+3. ส่งคำสั่งเพียงหนึ่งหมายเลขต่อรอบ
+4. บันทึกไฟล์ผลลัพธ์ทับเป็นเวอร์ชันใหม่ เช่น `index_v02.html`
+5. ทดสอบ Mouse และ Touch ก่อนเสมอ
+6. ทดสอบ AR บน GitHub Pages/localhost ไม่ใช้ `file://`
+7. เก็บไฟล์ที่ผ่านแต่ละขั้นไว้เพื่อย้อนกลับได้
