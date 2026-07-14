@@ -40,7 +40,6 @@
 
         h1, h2, h3 { font-family: var(--font-heading); }
         
-        /* 1. HTML Screens Styles */
         .screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -55,21 +54,11 @@
 
         .hidden { display: none !important; opacity: 0; pointer-events: none; }
 
-        /* Background Layers Z-Index rules */
+        /* Background Layers */
         .bg-layer {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 0;
-            pointer-events: none;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-
-        .bg-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1;
             pointer-events: none;
         }
 
@@ -85,7 +74,7 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
             max-width: 90%;
             width: 500px;
-            z-index: 10; 
+            z-index: 1; /* Stay above bg-layer */
             position: relative;
         }
 
@@ -124,8 +113,7 @@
         .bg-anim-breath { animation: breathBg 5s ease-in-out infinite alternate; }
         @keyframes breathBg { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
 
-        .no-motion .pulse { animation: none !important; box-shadow: 0 0 15px var(--color-primary) !important; transform: scale(1) !important;}
-        .no-motion .bg-anim-breath { animation: none !important; transform: scale(1) !important; }
+        .no-motion { animation: none !important; transition: none !important; transform: none !important; }
 
         /* Inputs */
         input[type="text"] {
@@ -176,8 +164,8 @@
         .map-node.passed { border-color: var(--color-success); background: rgba(0, 255, 136, 0.2); }
 
         /* Game UI */
-        #game-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 4; }
-        #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+        #game-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
         .hud-top { display: flex; justify-content: space-between; align-items: flex-start; }
         .hud-box { background: rgba(0,0,0,0.6); padding: 10px 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 10px; pointer-events: auto;}
         
@@ -206,20 +194,10 @@
         
         /* 4. Accessibility */
         .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-        .title-content { position: relative; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none; }
+        
+        /* Title text layer specific to start screen */
+        .title-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none; }
         .title-content > * { pointer-events: auto; }
-
-        /* AR Camera Layout Logic */
-        #ar-video-container {
-            z-index: 2; pointer-events: none;
-            overflow: hidden;
-        }
-        .ar-mode-check {
-            position: relative; width: 100%; max-width: 400px; aspect-ratio: 4/3; margin: 20px auto; background: #000; border-radius: 10px; opacity: 1; display: block;
-        }
-        .ar-mode-game {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.35; display: block;
-        }
     </style>
 </head>
 <body>
@@ -227,17 +205,7 @@
     <!-- Toast Container -->
     <div id="toast-container" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:1000; pointer-events:none; display:flex; flex-direction:column; gap:10px;"></div>
 
-    <!-- Background Layer System -->
-    <div id="game-bg-img" class="bg-layer"></div>
-    <div id="game-bg-overlay" class="bg-overlay"></div>
-
-    <!-- Camera Video เฉพาะโหมด AR -->
-    <div id="ar-video-container" style="display: none;">
-        <video id="ar-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
-    </div>
-
     <!-- 1. HTML Screens -->
-
     <!-- Loading Screen -->
     <div id="screen-loading" class="screen">
         <h1 style="color: var(--color-primary); font-size: 3rem; text-shadow: 0 0 20px var(--color-primary);">HUNTERS 2.5</h1>
@@ -250,6 +218,7 @@
 
     <!-- Start Screen -->
     <div id="screen-start" class="screen hidden" style="background: transparent;">
+        <div id="start-bg" class="bg-layer"></div>
         <div class="title-content">
             <h1 style="font-size: 4rem; color: var(--color-primary); text-shadow: 0 0 20px var(--color-primary); margin-bottom: 10px;">HUNTERS 2.5</h1>
             <h2 style="font-size: 2rem; margin-bottom: 20px;">หน่วยล่าท้าฝุ่น</h2>
@@ -265,7 +234,7 @@
     </div>
 
     <!-- Player Setup Screen -->
-    <div id="screen-setup" class="screen hidden" style="background: transparent;">
+    <div id="screen-setup" class="screen hidden">
         <div class="glass-panel">
             <h2>ตั้งชื่อฮีโร่ของคุณ</h2>
             <label for="input-player-name" class="sr-only">ชื่อฮีโร่</label>
@@ -278,7 +247,7 @@
     </div>
 
     <!-- Character Select Screen -->
-    <div id="screen-character" class="screen hidden" style="background: transparent;">
+    <div id="screen-character" class="screen hidden">
         <div class="glass-panel" style="width: 800px; max-width: 95%;">
             <h2>เลือกตัวละคร</h2>
             <div class="card-container">
@@ -315,7 +284,7 @@
     </div>
 
     <!-- Control Mode Screen -->
-    <div id="screen-control" class="screen hidden" style="background: transparent;">
+    <div id="screen-control" class="screen hidden">
         <div class="glass-panel" style="width: 800px; max-width: 95%;">
             <h2>เลือกโหมดการเล่น</h2>
             <p style="color: #aaa; margin-bottom: 20px;">เลือกวิธีควบคุมที่เหมาะสมกับอุปกรณ์และความต้องการของคุณ</p>
@@ -345,11 +314,12 @@
     </div>
 
     <!-- AR Camera Check Screen -->
-    <div id="screen-ar-check" class="screen hidden" style="background: transparent;">
+    <div id="screen-ar-check" class="screen hidden">
         <div class="glass-panel" style="width: 600px;">
             <h2>ตรวจสอบกล้อง AR</h2>
-            <!-- Video placeholder for DOM moving logic -->
-            <div id="ar-check-video-slot" style="width: 100%; max-width: 400px; aspect-ratio: 4/3; margin: 20px auto; border-radius: 10px; overflow: hidden; position: relative; background: #000;"></div>
+            <div style="width: 100%; max-width: 400px; aspect-ratio: 4/3; margin: 20px auto; background: #000; border-radius: 10px; overflow: hidden; position: relative;">
+                <video id="ar-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+            </div>
             <p id="ar-status-text" style="color: var(--color-warning); font-size: 1.2rem;">กำลังรอการเปิดกล้อง...</p>
             <div style="margin-top: 20px;">
                 <button class="btn" onclick="backToControlMode()">กลับ / เปลี่ยนโหมด</button>
@@ -373,32 +343,31 @@
     </div>
 
     <!-- Mission Map Screen -->
-    <div id="screen-map" class="screen hidden" style="background: transparent;">
-        <div class="title-content">
-            <h2>Mission Map ศูนย์บัญชาการ</h2>
-            <div class="hud-box" style="margin-bottom: 30px;">
-                <p>ฮีโร่: <span id="map-player-name" style="color:var(--color-primary)"></span> | คะแนนรวม: <span id="map-total-score" style="color:var(--color-warning)">0</span></p>
-            </div>
-            
-            <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
-                <div class="map-node unlocked" id="node-1" onclick="startLevel(1)">1</div>
-                <div class="map-node locked" id="node-2" onclick="startLevel(2)">2</div>
-                <div class="map-node locked" id="node-3" onclick="startLevel(3)">3</div>
-                <div class="map-node locked" id="node-4" onclick="startLevel(4)">4</div>
-                <div class="map-node locked" id="node-5" onclick="startLevel(5)">5</div>
-            </div>
+    <div id="screen-map" class="screen hidden">
+        <h2>Mission Map ศูนย์บัญชาการ</h2>
+        <div class="hud-box" style="margin-bottom: 30px;">
+            <p>ฮีโร่: <span id="map-player-name" style="color:var(--color-primary)"></span> | คะแนนรวม: <span id="map-total-score" style="color:var(--color-warning)">0</span></p>
+        </div>
+        
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+            <div class="map-node unlocked" id="node-1" onclick="startLevel(1)">1</div>
+            <div class="map-node locked" id="node-2" onclick="startLevel(2)">2</div>
+            <div class="map-node locked" id="node-3" onclick="startLevel(3)">3</div>
+            <div class="map-node locked" id="node-4" onclick="startLevel(4)">4</div>
+            <div class="map-node locked" id="node-5" onclick="startLevel(5)">5</div>
+        </div>
 
-            <div style="margin-top: 40px;">
-                <button class="btn" onclick="showScreen('screen-start')">หน้าแรก</button>
-                <button class="btn" onclick="showScreen('screen-history')">ประวัติ</button>
-                <button class="btn" onclick="openControlMode()">เปลี่ยนโหมด</button>
-                <button class="btn" onclick="showSettingsModal()">ตั้งค่า</button>
-            </div>
+        <div style="margin-top: 40px;">
+            <button class="btn" onclick="showScreen('screen-start')">หน้าแรก</button>
+            <button class="btn" onclick="showScreen('screen-history')">ประวัติ</button>
+            <button class="btn" onclick="openControlMode()">เปลี่ยนโหมด</button>
+            <button class="btn" onclick="showSettingsModal()">ตั้งค่า</button>
         </div>
     </div>
 
     <!-- Gameplay Screen -->
     <div id="screen-game" class="screen hidden" style="background: transparent;">
+        <div id="game-bg" class="bg-layer"></div>
         <canvas id="game-canvas"></canvas>
         <div id="hud">
             <div class="hud-top">
@@ -538,7 +507,7 @@
 
     <script>
         /* =========================================
-           4. Accessibility & Polyfills
+           Polyfills
            ========================================= */
         if (!CanvasRenderingContext2D.prototype.roundRect) {
             CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
@@ -631,7 +600,7 @@
         const gameState = {
             screen: "loading", previousScreen: null, status: "idle", controlMode: null, pendingControlMode: null,
             playerName: "ฮีโร่นิรนาม", selectedHero: null, currentLevel: 0, unlockedLevel: 1,
-            score: 0, levelScore: 0, hp: 100, maxHp: 100, timeLeft: 0, timeAccumulator: 0, stars: 0, totalStars: 0,
+            score: 0, levelScore: 0, hp: 100, maxHp: 100, timeLeft: 0, stars: 0, totalStars: 0,
             paused: false, levelFinished: false, bestScores: {1:0, 2:0, 3:0, 4:0, 5:0},
             soundEnabled: true, narrationEnabled: true, vibrationEnabled: true, reducedMotion: false
         };
@@ -641,7 +610,7 @@
             active: false, pressed: false, justPressed: false, released: false, holdDuration: 0, gesture: "none"
         };
 
-        let lastTime = 0; let animationFrameId = null; 
+        let lastTime = 0; let animationFrameId = null; let levelTimerId = null;
         
         const levelState = {
             entities: [], particles: [], bossHp: 0, bossMaxHp: 30, progress: 0,
@@ -670,7 +639,6 @@
         const canvas = document.getElementById('game-canvas');
         const ctx = canvas.getContext('2d');
         const arVideoElement = document.getElementById('ar-video');
-        const arVideoContainer = document.getElementById('ar-video-container');
 
         /* =========================================
            11. Asset Manager (Image & Backgrounds)
@@ -732,31 +700,31 @@
             }
         }
 
-        function applyScreenBackground(bgKey, overlay) {
-            const elImg = document.getElementById('game-bg-img');
-            const elOverlay = document.getElementById('game-bg-overlay');
-            if (!elImg || !elOverlay) return;
-            
-            elImg.className = 'bg-layer';
-            if (bgKey === 'bgLevel4' && !gameState.reducedMotion) {
-                elImg.classList.add('bg-anim-breath');
-            }
-
+        function applyScreenBackground(elementId, bgKey, overlay) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
             const asset = loadedAssets[bgKey];
+            el.className = el.id === 'game-bg' ? 'bg-layer' : (el.id === 'start-bg' ? 'bg-layer' : el.className.replace(' bg-anim-breath', ''));
+
             if (asset instanceof Image) {
-                elImg.style.backgroundImage = `url('${asset.src}')`;
+                el.style.background = `${overlay}, url('${asset.src}')`;
+                el.style.backgroundSize = 'cover';
+                el.style.backgroundPosition = 'center';
+                el.style.backgroundRepeat = 'no-repeat';
             } else {
-                elImg.style.background = fallbacks[bgKey];
+                el.style.background = fallbacks[bgKey];
             }
-            elOverlay.style.background = overlay;
         }
 
         function applyLevelBackground(levelNum) {
-            if (levelNum === 1) applyScreenBackground('bgLevel1', 'linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5))');
-            else if (levelNum === 2) applyScreenBackground('bgLevel2', 'linear-gradient(rgba(50,0,50,0.6), rgba(0,0,0,0.8))');
-            else if (levelNum === 3) applyScreenBackground('bgLevel3', 'linear-gradient(rgba(20,0,40,0.7), rgba(0,0,0,0.9))');
-            else if (levelNum === 4) applyScreenBackground('bgLevel4', 'linear-gradient(rgba(0,100,150,0.4), rgba(0,50,80,0.6))');
-            else if (levelNum === 5) applyScreenBackground('bgLevel5', 'linear-gradient(rgba(20,50,10,0.5), rgba(10,30,0,0.7))');
+            const bgDiv = document.getElementById('game-bg');
+            if (levelNum === 1) applyScreenBackground('game-bg', 'bgLevel1', 'linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5))');
+            else if (levelNum === 2) applyScreenBackground('game-bg', 'bgLevel2', 'linear-gradient(rgba(50,0,50,0.6), rgba(0,0,0,0.8))');
+            else if (levelNum === 3) applyScreenBackground('game-bg', 'bgLevel3', 'linear-gradient(rgba(20,0,40,0.7), rgba(0,0,0,0.9))');
+            else if (levelNum === 4) {
+                applyScreenBackground('game-bg', 'bgLevel4', 'linear-gradient(rgba(0,100,150,0.4), rgba(0,50,80,0.6))');
+                if (!gameState.reducedMotion) bgDiv.classList.add('bg-anim-breath');
+            } else if (levelNum === 5) applyScreenBackground('game-bg', 'bgLevel5', 'linear-gradient(rgba(20,50,10,0.5), rgba(10,30,0,0.7))');
         }
 
         /* =========================================
@@ -831,7 +799,7 @@
             gameState.screen = screenId;
             
             if(screenId === 'screen-start') { 
-                applyScreenBackground('bgStart', 'linear-gradient(rgba(3, 8, 24, 0.42), rgba(3, 8, 24, 0.72))');
+                applyScreenBackground('start-bg', 'bgStart', 'linear-gradient(rgba(3, 8, 24, 0.42), rgba(3, 8, 24, 0.72))');
                 playBGM(); 
                 if (globalInteractionDone) playWelcomeNarration();
                 else pendingWelcomeNarration = true;
@@ -939,18 +907,14 @@
             if (mode === 'ar') {
                 gameState.previousScreen = gameState.screen; 
                 showScreen('screen-ar-check');
-                
-                // Mount video to AR Check Screen
-                document.getElementById('ar-check-video-slot').appendChild(arVideoElement);
-                arVideoContainer.style.display = 'none';
-
                 await stopAllInputSystems({ stopCamera: false });
                 await startARControls();
                 if (arLifecycle.status === 'error') gameState.controlMode = previousMode;
             } else {
                 await stopAllInputSystems({ stopCamera: true });
                 gameState.controlMode = mode; saveProgress();
-                startPointerControls();
+                if(mode === 'mouse') startMouseControls();
+                if(mode === 'touch') startTouchControls();
                 document.getElementById('hud-mode-badge').innerText = mode.toUpperCase();
                 
                 if (gameState.status === 'paused') {
@@ -959,13 +923,15 @@
             }
         }
 
+        function stopMouseControls() { canvas.onmousedown = null; window.onmousemove = null; window.onmouseup = null; window.onmouseleave = null; }
+        function stopTouchControls() { canvas.ontouchstart = null; window.ontouchmove = null; window.ontouchend = null; window.ontouchcancel = null; }
         function resetInputState() {
             inputState.active = false; inputState.pressed = false; inputState.justPressed = false;
             inputState.released = false; inputState.holdDuration = 0; inputState.gesture = "none";
         }
         
         async function stopAllInputSystems(options = {}) {
-            canvas.onpointerdown = null; canvas.onpointermove = null; canvas.onpointerup = null; canvas.onpointercancel = null;
+            stopMouseControls(); stopTouchControls();
             if (options.stopCamera === true) await stopARControls();
             resetInputState();
         }
@@ -995,40 +961,48 @@
            ========================================= */
         function getCanvasPos(evt) {
             const rect = canvas.getBoundingClientRect();
-            const clientX = evt.clientX;
-            const clientY = evt.clientY;
+            const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+            const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
             return {
                 x: (clientX - rect.left) * (canvas.width / rect.width),
                 y: (clientY - rect.top) * (canvas.height / rect.height)
             };
         }
 
-        function startPointerControls() {
-            canvas.onpointerdown = (e) => {
-                if(e.target === canvas) e.preventDefault(); 
-                canvas.setPointerCapture(e.pointerId);
+        function startMouseControls() {
+            canvas.onmousedown = (e) => {
                 const pos = getCanvasPos(e);
-                inputState.x = pos.x; inputState.y = pos.y;
-                inputState.lastX = pos.x; inputState.lastY = pos.y;
+                inputState.x = pos.x; inputState.y = pos.y; inputState.lastX = pos.x; inputState.lastY = pos.y;
                 inputState.pressed = true; inputState.justPressed = true; inputState.active = true;
             };
-            canvas.onpointermove = (e) => {
+            window.onmousemove = (e) => {
+                if(!inputState.active) return;
+                const pos = getCanvasPos(e);
+                inputState.lastX = inputState.x; inputState.lastY = inputState.y;
+                inputState.x = pos.x; inputState.y = pos.y;
+                inputState.velocityX = inputState.x - inputState.lastX; inputState.velocityY = inputState.y - inputState.lastY;
+            };
+            window.onmouseup = () => { inputState.pressed = false; inputState.released = true; };
+            window.onmouseleave = () => { if(inputState.pressed) { inputState.pressed = false; inputState.released = true; } };
+        }
+
+        function startTouchControls() {
+            canvas.ontouchstart = (e) => {
+                if(e.target === canvas) e.preventDefault(); 
+                const pos = getCanvasPos(e);
+                inputState.x = pos.x; inputState.y = pos.y; inputState.lastX = pos.x; inputState.lastY = pos.y;
+                inputState.pressed = true; inputState.justPressed = true; inputState.active = true;
+            };
+            window.ontouchmove = (e) => {
                 if(!inputState.pressed) return;
                 if(e.target === canvas) e.preventDefault(); 
                 const pos = getCanvasPos(e);
                 inputState.lastX = inputState.x; inputState.lastY = inputState.y;
                 inputState.x = pos.x; inputState.y = pos.y;
-                inputState.velocityX = inputState.x - inputState.lastX;
-                inputState.velocityY = inputState.y - inputState.lastY;
+                inputState.velocityX = inputState.x - inputState.lastX; inputState.velocityY = inputState.y - inputState.lastY;
             };
-            canvas.onpointerup = (e) => {
-                if(e.target === canvas) e.preventDefault();
-                try { canvas.releasePointerCapture(e.pointerId); } catch(err){}
-                inputState.pressed = false; inputState.released = true;
-            };
-            canvas.onpointercancel = (e) => {
-                inputState.pressed = false; inputState.released = true;
-            };
+            window.ontouchend = () => { inputState.pressed = false; inputState.released = true; };
+            window.ontouchcancel = () => { inputState.pressed = false; inputState.released = true; };
         }
 
         /* =========================================
@@ -1209,12 +1183,8 @@
         }
 
         function detectLevel5Pinch(landmarks) {
-            const p0 = mapVideoPointToCanvas(landmarks[0]);
-            const p4 = mapVideoPointToCanvas(landmarks[4]);
-            const p8 = mapVideoPointToCanvas(landmarks[8]);
-            const p9 = mapVideoPointToCanvas(landmarks[9]);
-            
-            arState.handScale = Math.hypot(p9.x - p0.x, p9.y - p0.y) || 1;
+            const p0 = landmarks[0], p4 = landmarks[4], p8 = landmarks[8], p9 = landmarks[9];
+            arState.handScale = Math.hypot(p9.x - p0.x, p9.y - p0.y);
             const pinchDist = Math.hypot(p8.x - p4.x, p8.y - p4.y);
             const normalizedDist = pinchDist / arState.handScale;
 
@@ -1309,7 +1279,7 @@
             
             gameState.currentLevel = levelNum;
             gameState.levelScore = 0; gameState.hp = gameState.maxHp;
-            gameState.timeLeft = LEVELS_DATA[levelNum].time; gameState.timeAccumulator = 0;
+            gameState.timeLeft = LEVELS_DATA[levelNum].time;
             gameState.stars = 0; gameState.levelFinished = false;
             gameState.status = "playing"; gameState.paused = false;
             
@@ -1340,25 +1310,23 @@
 
             resizeCanvas();
             applyLevelBackground(levelNum);
-
-            // Setup AR Video Z-Index properly if AR
-            if (gameState.controlMode === 'ar') {
-                arVideoContainer.appendChild(arVideoElement);
-                arVideoContainer.className = 'ar-mode-game';
-                arVideoContainer.style.display = 'block';
-            } else {
-                arVideoContainer.style.display = 'none';
-            }
-
             showScreen('screen-game');
             speakThai(lData.objective);
             
+            stopAllTimers();
+            levelTimerId = setInterval(() => {
+                if(!gameState.paused && gameState.status === "playing" && gameState.timeLeft > 0) {
+                    gameState.timeLeft--;
+                    if(gameState.timeLeft <= 10 && gameState.timeLeft > 0) playSound(1000, 'sine', 0.05); 
+                }
+            }, 1000);
+
             if(levelNum === 1) initLevel1();
             else if(levelNum === 3) initLevel3();
             else if(levelNum === 5) initLevel5();
 
             lastTime = performance.now();
-            if (!animationFrameId) animationFrameId = requestAnimationFrame(gameLoop);
+            animationFrameId = requestAnimationFrame(gameLoop);
         }
 
         /* =========================================
@@ -1442,14 +1410,6 @@
             updateParticles(dt);
             updateHUD();
             
-            if(!gameState.levelFinished && gameState.timeLeft > 0) {
-                gameState.timeAccumulator += dt;
-                if (gameState.timeAccumulator >= 1000) {
-                    gameState.timeLeft--;
-                    gameState.timeAccumulator -= 1000;
-                    if(gameState.timeLeft <= 10 && gameState.timeLeft > 0) playSound(1000, 'sine', 0.05); 
-                }
-            }
             if(!gameState.levelFinished && gameState.timeLeft <= 0) checkLevelEndConditions(true);
         }
 
@@ -1555,7 +1515,7 @@
         }
 
         /* =========================================
-           25. Level 5
+           25. Level 5 (Refactored per requirements)
            ========================================= */
         function resetLevel5State() {
             level5State.foods = [];
@@ -1573,7 +1533,9 @@
             level5State.foodIdCounter = 0;
         }
 
-        function createLevel5FoodData() { return LEVEL5_FOODS; }
+        function createLevel5FoodData() {
+            return LEVEL5_FOODS;
+        }
 
         function buildLevel5SpawnQueue() {
             let missingGroups = [1, 2, 3, 4, 5].filter(g => !level5State.collectedGroups.has(g));
@@ -1582,14 +1544,18 @@
             if (missingGroups.length > 0 && Math.random() > 0.3) {
                 let targetGroup = missingGroups[Math.floor(Math.random() * missingGroups.length)];
                 candidateFoods = allFoods.filter(f => f.groupId === targetGroup);
-            } else { candidateFoods = allFoods; }
+            } else {
+                candidateFoods = allFoods;
+            }
             return candidateFoods;
         }
 
         function getLevel5SpawnPosition() {
-            let x, y; let attempts = 0;
+            let x, y;
+            let attempts = 0;
             while(attempts < 10) {
-                x = Math.random() * (canvas.width - 100) + 10; y = Math.random() * (canvas.height - 300) + 50; 
+                x = Math.random() * (canvas.width - 100) + 10;
+                y = Math.random() * (canvas.height - 300) + 50; 
                 let overlap = level5State.foods.some(f => Math.hypot(f.x - x, f.y - y) < 80);
                 if (!overlap) break;
                 attempts++;
@@ -1604,7 +1570,8 @@
             const instanceId = `food-${Date.now()}-${level5State.foodIdCounter++}`;
 
             level5State.foods.push({
-                instanceId: instanceId, ...foodData,
+                instanceId: instanceId,
+                ...foodData,
                 x: pos.x, y: pos.y, originalX: pos.x, originalY: pos.y, w: 80, h: 80,
                 asset: loadedAssets[foodData.assetKey] || fallbacks[foodData.assetKey]
             });
@@ -1651,13 +1618,21 @@
                 if (addedNew) msg += `\nเก็บหมู่ ${e.groupId} สำเร็จ!`;
                 else msg += `\nหมู่นี้เก็บแล้ว`;
 
-                showLevel5Feedback(msg, "var(--color-success)"); playSound(1000, 'sine', 0.1); createParticles(e.x+e.w/2, e.y+e.h/2, 'green', 15);
+                showLevel5Feedback(msg, "var(--color-success)");
+                playSound(1000, 'sine', 0.1);
+                createParticles(e.x+e.w/2, e.y+e.h/2, 'green', 15);
 
-                if(level5State.collectedGroups.size >= 5) finishLevel('passed');
+                if(level5State.collectedGroups.size >= 5) {
+                    finishLevel('passed');
+                }
+
             } else if (e.category === 'limited') {
                 gameState.levelScore = Math.max(0, gameState.levelScore - 30);
                 level5State.errorCount++;
-                showLevel5Feedback(`-30 คะแนน\nควรรับประทานแต่น้อย`, "var(--color-danger)"); playSound(200, 'sawtooth', 0.2); createParticles(e.x+e.w/2, e.y+e.h/2, 'gray', 15); vibrate(100);
+                showLevel5Feedback(`-30 คะแนน\nควรรับประทานแต่น้อย`, "var(--color-danger)");
+                playSound(200, 'sawtooth', 0.2);
+                createParticles(e.x+e.w/2, e.y+e.h/2, 'gray', 15);
+                vibrate(100);
             }
             spawnLevel5Food();
         }
@@ -1673,11 +1648,18 @@
         }
 
         function addCollectedFoodGroup(groupId) {
-            if (!level5State.collectedGroups.has(groupId)) { level5State.collectedGroups.add(groupId); return true; }
+            if (!level5State.collectedGroups.has(groupId)) {
+                level5State.collectedGroups.add(groupId);
+                return true;
+            }
             return false;
         }
 
-        function showLevel5Feedback(text, color) { level5State.feedbackText = text; level5State.feedbackColor = color; level5State.feedbackTimer = 2000; }
+        function showLevel5Feedback(text, color) {
+            level5State.feedbackText = text;
+            level5State.feedbackColor = color;
+            level5State.feedbackTimer = 2000;
+        }
 
         function updateLevel5(dt) {
             if (level5State.feedbackTimer > 0) level5State.feedbackTimer -= dt;
@@ -1695,20 +1677,27 @@
 
         function updateLevel5ProgressUI() {
             const groups = ["หมู่ 1 โปรตีน", "หมู่ 2 คาร์โบไฮเดรต", "หมู่ 3 เกลือแร่หรือแร่ธาตุ", "หมู่ 4 วิตามิน", "หมู่ 5 ไขมัน"];
-            ctx.save(); ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.font = "18px var(--font-body)";
+            ctx.save();
+            ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.font = "18px var(--font-body)";
             let startX = 20, startY = 120;
             
-            ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.beginPath(); ctx.roundRect(startX - 10, startY - 10, 260, 180, 10); ctx.fill(); 
-            ctx.fillStyle = "white"; ctx.fillText(`อาหารครบ 5 หมู่: ${level5State.collectedGroups.size}/5`, startX, startY);
+            ctx.fillStyle = "rgba(0,0,0,0.6)";
+            ctx.beginPath(); ctx.roundRect(startX - 10, startY - 10, 260, 180, 10); ctx.fill(); 
+            
+            ctx.fillStyle = "white";
+            ctx.fillText(`อาหารครบ 5 หมู่: ${level5State.collectedGroups.size}/5`, startX, startY);
             
             ctx.font = "16px var(--font-body)";
             groups.forEach((g, idx) => {
-                const gid = idx + 1; const collected = level5State.collectedGroups.has(gid);
-                ctx.fillStyle = collected ? "var(--color-success)" : "white"; ctx.fillText(`${collected ? '✓' : '○'} ${g}`, startX, startY + 30 + (idx * 25));
+                const gid = idx + 1;
+                const collected = level5State.collectedGroups.has(gid);
+                ctx.fillStyle = collected ? "var(--color-success)" : "white";
+                ctx.fillText(`${collected ? '✓' : '○'} ${g}`, startX, startY + 30 + (idx * 25));
             });
             
             ctx.font = "12px var(--font-body)"; ctx.fillStyle = "#aaa";
-            ctx.fillText("ข้อมูลอาหารในเกมจัดทำขึ้นเพื่อการเรียนรู้เรื่องอาหาร 5 หมู่", startX, startY + 160); ctx.restore();
+            ctx.fillText("ข้อมูลอาหารในเกมจัดทำขึ้นเพื่อการเรียนรู้เรื่องอาหาร 5 หมู่", startX, startY + 160);
+            ctx.restore();
         }
 
         function drawFiveFingerTracking() {
@@ -1717,14 +1706,20 @@
             for(let i=0; i<5; i++) {
                 ctx.beginPath(); ctx.arc(arState.fingertips[i].x, arState.fingertips[i].y, 8, 0, Math.PI*2); ctx.fill();
             }
-            ctx.beginPath(); ctx.moveTo(arState.fingertips[0].x, arState.fingertips[0].y); ctx.lineTo(arState.fingertips[1].x, arState.fingertips[1].y);
-            ctx.strokeStyle = arState.isPinching ? "var(--color-success)" : "rgba(255,255,255,0.5)"; ctx.lineWidth = 3; ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(arState.fingertips[0].x, arState.fingertips[0].y);
+            ctx.lineTo(arState.fingertips[1].x, arState.fingertips[1].y);
+            ctx.strokeStyle = arState.isPinching ? "var(--color-success)" : "rgba(255,255,255,0.5)";
+            ctx.lineWidth = 3; ctx.stroke();
 
             if (arState.isPinching) {
-                ctx.beginPath(); ctx.arc(inputState.x, inputState.y, gameState.reducedMotion ? 15 : 24, 0, Math.PI*2); ctx.fillStyle = "var(--color-success)"; ctx.fill();
-                ctx.font = "14px var(--font-body)"; ctx.fillStyle = "var(--color-success)"; ctx.fillText("กำลังจับ", inputState.x, inputState.y - 30);
+                ctx.beginPath(); ctx.arc(inputState.x, inputState.y, gameState.reducedMotion ? 15 : 24, 0, Math.PI*2);
+                ctx.fillStyle = "var(--color-success)"; ctx.fill();
+                ctx.font = "14px var(--font-body)"; ctx.fillStyle = "var(--color-success)";
+                ctx.fillText("กำลังจับ", inputState.x, inputState.y - 30);
             } else {
-                ctx.font = "14px var(--font-body)"; ctx.fillStyle = "rgba(255,255,255,0.8)"; ctx.fillText("พร้อมจับ", inputState.x, inputState.y - 30);
+                ctx.font = "14px var(--font-body)"; ctx.fillStyle = "rgba(255,255,255,0.8)";
+                ctx.fillText("พร้อมจับ", inputState.x, inputState.y - 30);
             }
         }
 
@@ -1733,8 +1728,11 @@
             
             if (level5State.draggingFood && checkIntersect(level5State.draggingFood.x + level5State.draggingFood.w/2, level5State.draggingFood.y + level5State.draggingFood.h/2, level5State.basket)) {
                 ctx.save();
-                if (!gameState.reducedMotion) { ctx.shadowBlur = 20; ctx.shadowColor = "var(--color-success)"; }
-                ctx.strokeStyle = "var(--color-success)"; ctx.lineWidth = 4; ctx.strokeRect(level5State.basket.x, level5State.basket.y, level5State.basket.w, level5State.basket.h);
+                if (!gameState.reducedMotion) {
+                    ctx.shadowBlur = 20; ctx.shadowColor = "var(--color-success)";
+                }
+                ctx.strokeStyle = "var(--color-success)"; ctx.lineWidth = 4;
+                ctx.strokeRect(level5State.basket.x, level5State.basket.y, level5State.basket.w, level5State.basket.h);
                 ctx.restore();
             }
 
@@ -1742,29 +1740,44 @@
                 drawEntity(e);
                 if (e === level5State.draggingFood) {
                     ctx.save(); 
-                    if (!gameState.reducedMotion) { ctx.shadowBlur = 15; ctx.shadowColor = "white"; }
-                    ctx.strokeStyle = "rgba(255,255,255,0.8)"; ctx.lineWidth = 3; ctx.strokeRect(e.x, e.y, e.w, e.h); ctx.restore();
-                    ctx.font = "16px var(--font-body)"; ctx.fillStyle = "white"; ctx.fillText(e.name, e.x + e.w/2, e.y - 10); ctx.font = "60px Arial";
+                    if (!gameState.reducedMotion) {
+                        ctx.shadowBlur = 15; ctx.shadowColor = "white";
+                    }
+                    ctx.strokeStyle = "rgba(255,255,255,0.8)"; ctx.lineWidth = 3;
+                    ctx.strokeRect(e.x, e.y, e.w, e.h); ctx.restore();
+                    ctx.font = "16px var(--font-body)"; ctx.fillStyle = "white";
+                    ctx.fillText(e.name, e.x + e.w/2, e.y - 10); ctx.font = "60px Arial";
                 }
             }
 
             if (level5State.feedbackTimer > 0) {
-                const lines = level5State.feedbackText.split('\n'); ctx.font = "bold 24px var(--font-heading)"; ctx.fillStyle = level5State.feedbackColor;
+                const lines = level5State.feedbackText.split('\n');
+                ctx.font = "bold 24px var(--font-heading)"; ctx.fillStyle = level5State.feedbackColor;
                 lines.forEach((line, idx) => { ctx.fillText(line, level5State.basket.x + level5State.basket.w/2, level5State.basket.y - 80 + (idx * 30)); });
             }
 
             updateLevel5ProgressUI();
             
-            if (gameState.controlMode === 'ar' && inputState.active) drawFiveFingerTracking();
-            else if (inputState.active || inputState.pressed) {
-                ctx.beginPath(); ctx.arc(inputState.x, inputState.y, 20, 0, Math.PI*2); ctx.fillStyle = inputState.pressed ? "rgba(255, 255, 255, 0.8)" : "rgba(255, 255, 255, 0.4)"; ctx.fill();
+            if (gameState.controlMode === 'ar' && inputState.active) {
+                drawFiveFingerTracking();
+            } else if (inputState.active || inputState.pressed) {
+                ctx.beginPath(); ctx.arc(inputState.x, inputState.y, 20, 0, Math.PI*2);
+                ctx.fillStyle = inputState.pressed ? "rgba(255, 255, 255, 0.8)" : "rgba(255, 255, 255, 0.4)"; ctx.fill();
             }
         }
 
         function cleanupLevel5() {
-            level5State.draggingFood = null; level5State.foods = []; level5State.collectedGroups.clear(); level5State.collectedFoodIds.clear(); level5State.feedbackTimer = 0;
-            arState.fingertips = []; arState.isPinching = false; arState.wasPinching = false;
-            resetInputState();
+            level5State.draggingFood = null;
+            level5State.foods = [];
+            level5State.collectedGroups.clear();
+            level5State.collectedFoodIds.clear();
+            level5State.feedbackTimer = 0;
+            arState.fingertips = [];
+            arState.isPinching = false;
+            arState.wasPinching = false;
+            inputState.pressed = false;
+            inputState.justPressed = false;
+            inputState.released = false;
         }
 
         function checkLevelEndConditions(timeout) {
@@ -1774,7 +1787,9 @@
                 else if(lvl === 2) finishLevel('passed');
                 else if(lvl === 3) finishLevel('failed');
                 else if(lvl === 4) finishLevel('failed');
-                else if(lvl === 5) { if(level5State.collectedGroups.size < 5) finishLevel('failed'); }
+                else if(lvl === 5) {
+                    if(level5State.collectedGroups.size < 5) finishLevel('failed');
+                }
             }
         }
 
@@ -1788,15 +1803,25 @@
             if(lvl === 1 || lvl === 4 || lvl === 5) return; 
 
             if(hero === 'sky') {
-                levelState.invulnerableTime = 3000; levelState.cooldowns.skill = 10000; playSound(500, 'sine', 0.3); createParticles(canvas.width/2, canvas.height/2, 'cyan', 30);
+                levelState.invulnerableTime = 3000;
+                levelState.cooldowns.skill = 10000;
+                playSound(500, 'sine', 0.3); 
+                createParticles(canvas.width/2, canvas.height/2, 'cyan', 30);
             }
             else if(hero === 'zee') {
-                if(lvl === 2) { gameState.levelScore += levelState.entities.length * 10; levelState.entities = []; } 
-                else if(lvl === 3) { levelState.bossHp -= 6; }
-                levelState.cooldowns.skill = 15000; playSound(300, 'square', 0.3); createParticles(canvas.width/2, canvas.height/2, 'yellow', 50);
+                if(lvl === 2) {
+                    gameState.levelScore += levelState.entities.length * 10;
+                    levelState.entities = []; 
+                } else if(lvl === 3) { levelState.bossHp -= 6; }
+                levelState.cooldowns.skill = 15000;
+                playSound(300, 'square', 0.3); 
+                createParticles(canvas.width/2, canvas.height/2, 'yellow', 50);
             }
             else if(hero === 'bubble') {
-                gameState.hp = Math.min(gameState.maxHp, gameState.hp + 30); levelState.cooldowns.skill = 8000; playSound(900, 'sine', 0.2); createParticles(canvas.width/2, canvas.height/2, 'pink', 20);
+                gameState.hp = Math.min(gameState.maxHp, gameState.hp + 30);
+                levelState.cooldowns.skill = 8000;
+                playSound(900, 'sine', 0.2); 
+                createParticles(canvas.width/2, canvas.height/2, 'pink', 20);
             }
             document.getElementById('btn-skill').disabled = true;
         }
@@ -1827,8 +1852,11 @@
 
         function takeDamage(amt) {
             if(levelState.invulnerableTime > 0) return;
-            gameState.hp -= amt; levelState.invulnerableTime = 1000;
-            playSound(400, 'square', 0.1); createParticles(canvas.width/2, canvas.height/2, 'red', 10); vibrate(50);
+            gameState.hp -= amt;
+            levelState.invulnerableTime = 1000;
+            playSound(400, 'square', 0.1); 
+            createParticles(canvas.width/2, canvas.height/2, 'red', 10);
+            vibrate(50);
         }
 
         function vibrate(ms) {
@@ -1839,13 +1867,18 @@
            18. Canvas Renderer
            ========================================= */
         function drawEntity(e) {
-            if(typeof e.asset === 'string') { ctx.fillText(e.asset, e.x + e.w/2, e.y + e.h/2); } 
-            else if (e.asset instanceof Image) { ctx.drawImage(e.asset, e.x, e.y, e.w, e.h); }
+            if(typeof e.asset === 'string') {
+                ctx.fillText(e.asset, e.x + e.w/2, e.y + e.h/2);
+            } else if (e.asset instanceof Image) {
+                ctx.drawImage(e.asset, e.x, e.y, e.w, e.h);
+            }
         }
 
         function renderGame() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.font = "60px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.font = "60px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
 
             const lvl = gameState.currentLevel;
 
@@ -1854,37 +1887,49 @@
             } else {
                 if(lvl === 4) {
                     const cx = canvas.width/2, cy = canvas.height/2, r = 150;
-                    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.strokeStyle = "rgba(0, 210, 255, 0.5)"; ctx.lineWidth = 10; ctx.stroke();
+                    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
+                    ctx.strokeStyle = "rgba(0, 210, 255, 0.5)"; ctx.lineWidth = 10; ctx.stroke();
+                    
                     ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI/2, -Math.PI/2 + (levelState.progress/5000)*Math.PI*2);
                     ctx.strokeStyle = "var(--color-success)"; ctx.lineWidth = 10; ctx.stroke();
+                    
                     ctx.font = "30px var(--font-body)"; ctx.fillStyle = "white";
-                    ctx.fillText(levelState.progress<5000?"วางมือค้างในวงเป้าหมายและหายใจตามปกติอย่างช้า ๆ":"เยี่ยมมาก!", cx, cy); ctx.font = "60px Arial";
+                    ctx.fillText(levelState.progress<5000?"วางมือค้างในวงเป้าหมายและหายใจตามปกติอย่างช้า ๆ":"เยี่ยมมาก!", cx, cy);
+                    ctx.font = "60px Arial";
                 }
 
                 if(lvl === 3 && levelState.boss) {
-                    let b = levelState.boss; drawEntity(b);
-                    ctx.fillStyle = "red"; ctx.fillRect(b.x, b.y - 20, b.w * (levelState.bossHp/levelState.bossMaxHp), 10);
+                    let b = levelState.boss;
+                    drawEntity(b);
+                    ctx.fillStyle = "red";
+                    ctx.fillRect(b.x, b.y - 20, b.w * (levelState.bossHp/levelState.bossMaxHp), 10);
                 }
 
                 for(let e of levelState.entities) { drawEntity(e); }
 
                 if(levelState.invulnerableTime > 0) {
-                    ctx.fillStyle = "rgba(0, 210, 255, 0.3)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = "rgba(0, 210, 255, 0.3)";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
                 }
 
                 if(inputState.active || inputState.pressed) {
-                    ctx.beginPath(); ctx.arc(inputState.x, inputState.y, 20, 0, Math.PI*2);
-                    ctx.fillStyle = inputState.pressed ? "rgba(255, 255, 255, 0.8)" : "rgba(255, 255, 255, 0.4)"; ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(inputState.x, inputState.y, 20, 0, Math.PI*2);
+                    ctx.fillStyle = inputState.pressed ? "rgba(255, 255, 255, 0.8)" : "rgba(255, 255, 255, 0.4)";
+                    ctx.fill();
 
                     if(gameState.controlMode === 'ar' && lvl === 1) {
-                        ctx.beginPath(); ctx.arc(inputState.x, inputState.y, 30, -Math.PI/2, -Math.PI/2 + (arState.dwellProgress/1000) * Math.PI*2);
-                        ctx.strokeStyle = "var(--color-primary)"; ctx.lineWidth = 5; ctx.stroke();
+                        ctx.beginPath();
+                        ctx.arc(inputState.x, inputState.y, 30, -Math.PI/2, -Math.PI/2 + (arState.dwellProgress/1000) * Math.PI*2);
+                        ctx.strokeStyle = "var(--color-primary)";
+                        ctx.lineWidth = 5; ctx.stroke();
                     }
                 }
             }
 
             for(let p of levelState.particles) {
-                ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
                 ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
             }
             ctx.globalAlpha = 1.0;
@@ -1897,14 +1942,17 @@
             if(gameState.reducedMotion) count = Math.min(count, 5); 
             for(let i=0; i<count; i++) {
                 levelState.particles.push({
-                    x: x, y: y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10,
+                    x: x, y: y,
+                    vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10,
                     r: Math.random()*5 + 2, alpha: 1.0, color: color
                 });
             }
         }
         function updateParticles(dt) {
             for(let i=levelState.particles.length-1; i>=0; i--) {
-                let p = levelState.particles[i]; p.x += p.vx; p.y += p.vy; p.alpha -= 0.02 * (dt/16);
+                let p = levelState.particles[i];
+                p.x += p.vx; p.y += p.vy;
+                p.alpha -= 0.02 * (dt/16);
                 if(p.alpha <= 0) levelState.particles.splice(i, 1);
             }
         }
@@ -1921,9 +1969,11 @@
         async function resumeGame() {
             if (gameState.controlMode === 'ar' && arLifecycle.status !== 'active') {
                 showToast('กล้องถูกหยุดชั่วคราว กรุณากดเริ่มกล้องอีกครั้ง');
-                gameState.previousScreen = gameState.screen; showScreen('screen-ar-check');
+                gameState.previousScreen = gameState.screen;
+                showScreen('screen-ar-check');
                 document.getElementById('modal-pause').classList.add('hidden');
-                await startARControls(); return;
+                await startARControls();
+                return;
             }
             gameState.paused = false;
             document.getElementById('modal-pause').classList.add('hidden');
@@ -1935,10 +1985,13 @@
            ========================================= */
         function finishLevel(resultStatus) {
             if(gameState.levelFinished) return;
-            gameState.levelFinished = true; gameState.status = "result";
+            gameState.levelFinished = true;
+            gameState.status = "result";
             stopAllTimers();
 
-            const lvl = gameState.currentLevel; const lData = LEVELS_DATA[lvl];
+            const lvl = gameState.currentLevel;
+            const lData = LEVELS_DATA[lvl];
+
             let stars = 0;
             if(resultStatus === 'passed') {
                 if(lvl === 1) stars = gameState.timeLeft >= 14 ? 3 : (gameState.timeLeft >= 7 ? 2 : 1);
@@ -1947,8 +2000,11 @@
                 else if(lvl === 4) stars = gameState.timeLeft >= 12 ? 3 : (gameState.timeLeft >= 6 ? 2 : 1);
                 else if(lvl === 5) stars = calculateLevel5Stars();
                 else stars = 1; 
+                
                 playSound(600, 'square', 0.1); setTimeout(()=>playSound(800, 'square', 0.2), 100); 
-            } else { playSound(200, 'sawtooth', 0.5); }
+            } else {
+                playSound(200, 'sawtooth', 0.5); 
+            }
             gameState.stars = stars;
 
             document.getElementById('result-icon').innerText = resultStatus === 'passed' ? '🎉' : '❌';
@@ -1966,8 +2022,11 @@
                     <p style="font-size:1.2rem;">เลือกถูก: <span style="color:var(--color-success)">${level5State.correctCount}</span> | เลือกผิด: <span style="color:var(--color-danger)">${level5State.errorCount}</span></p>
                     <p>หมู่ที่เก็บได้: <span style="color:var(--color-success)">${successGroups}</span></p>
                     <p>หมู่ที่ขาด: <span style="color:var(--color-danger)">${missing}</span></p>
-                `; resultExtraStats.style.display = 'block';
-            } else { resultExtraStats.style.display = 'none'; }
+                `;
+                resultExtraStats.style.display = 'block';
+            } else {
+                resultExtraStats.style.display = 'none';
+            }
 
             let finalKnowledge = lData.knowledge;
             if (lvl === 5) {
@@ -1975,53 +2034,83 @@
                 else finalKnowledge = "ยังเก็บอาหารไม่ครบทั้ง 5 หมู่ ลองสังเกตว่าอาหารแต่ละชนิดอยู่ในหมู่ใด แล้วลองอีกครั้ง";
             }
             document.getElementById('result-knowledge').innerText = finalKnowledge;
+
             document.getElementById('btn-result-next').style.display = (resultStatus === 'passed') ? 'inline-block' : 'none';
 
             if(resultStatus === 'passed') {
                 if(gameState.levelScore > gameState.bestScores[lvl]) gameState.bestScores[lvl] = gameState.levelScore;
                 if(lvl === gameState.unlockedLevel && lvl < 5) gameState.unlockedLevel++;
             }
-            saveProgress(); saveHistory(resultStatus); showScreen('screen-result');
-            if (resultStatus === 'passed' && lvl === 5) speakThai("ยอดเยี่ยม! ควรรับประทานอาหารที่มีประโยชน์และหลีกเลี่ยงอาหารที่ควรรับประทานแต่น้อย");
-            else speakThai(finalKnowledge);
+            saveProgress();
+            saveHistory(resultStatus);
+
+            showScreen('screen-result');
+            
+            if (resultStatus === 'passed' && lvl === 5) {
+                speakThai("ยอดเยี่ยม! ควรรับประทานอาหารที่มีประโยชน์และหลีกเลี่ยงอาหารที่ควรรับประทานแต่น้อย");
+            } else {
+                speakThai(finalKnowledge);
+            }
         }
 
         function showMissionComplete() {
-            calculateTotalScore(); document.getElementById('complete-score').innerText = gameState.score; showScreen('screen-complete');
+            calculateTotalScore();
+            document.getElementById('complete-score').innerText = gameState.score;
+            showScreen('screen-complete');
             playSound(600, 'square', 0.1); setTimeout(()=>playSound(800, 'square', 0.2), 100); setTimeout(()=>playSound(1000, 'square', 0.4), 200);
             speakThai("ภารกิจสำเร็จ! คุณคือฮีโร่พิทักษ์อากาศ อย่าลืมตรวจสอบคุณภาพอากาศ สวมหน้ากากที่เหมาะสม ลดกิจกรรมกลางแจ้งเมื่อค่าฝุ่นสูง และดูแลสุขภาพอย่างสม่ำเสมอ");
         }
 
         function restartLevel() {
-            document.getElementById('modal-pause').classList.add('hidden'); document.getElementById('screen-result').classList.add('hidden');
-            stopSpeech(); startLevel(gameState.currentLevel);
+            document.getElementById('modal-pause').classList.add('hidden');
+            document.getElementById('screen-result').classList.add('hidden');
+            stopSpeech();
+            startLevel(gameState.currentLevel);
         }
 
         function quitToMap() {
             stopAllTimers(); stopSpeech();
-            document.getElementById('modal-pause').classList.add('hidden'); document.getElementById('screen-result').classList.add('hidden');
+            document.getElementById('modal-pause').classList.add('hidden');
+            document.getElementById('screen-result').classList.add('hidden');
             showScreen('screen-map');
         }
 
         function nextLevel() {
             stopSpeech();
-            if(gameState.currentLevel < 5) startLevel(gameState.currentLevel + 1); else showMissionComplete();
+            if(gameState.currentLevel < 5) startLevel(gameState.currentLevel + 1);
+            else showMissionComplete();
         }
 
         /* =========================================
            30. Leaderboard & History
            ========================================= */
         function updateHistoryUI() {
-            const list = document.getElementById('history-list'); list.innerHTML = '';
+            const list = document.getElementById('history-list');
+            list.innerHTML = '';
             try {
                 let history = JSON.parse(localStorage.getItem('hunters25_history')) || [];
                 if(history.length === 0) { list.innerHTML = '<p style="text-align:center; color:#aaa;">ยังไม่มีประวัติการเล่น</p>'; return; }
+                
                 history.sort((a, b) => b.score - a.score);
                 history.forEach((h, index) => {
-                    const item = document.createElement('div'); item.className = 'hud-box';
+                    const item = document.createElement('div');
+                    item.className = 'hud-box';
                     item.style.display = 'flex'; item.style.justifyContent = 'space-between'; item.style.alignItems = 'center';
-                    let rankBadge = `#${index + 1}`; if(index === 0) rankBadge = '🥇'; else if(index === 1) rankBadge = '🥈'; else if(index === 2) rankBadge = '🥉';
-                    item.innerHTML = `<div><span style="font-size:1.5rem; width:40px; display:inline-block;">${rankBadge}</span><strong>${h.name}</strong> (${h.hero}) <span style="font-size:0.8rem; color:#aaa; margin-left:10px;">ด่าน ${h.level} | ${h.date}</span></div><div style="text-align:right;"><div style="color:var(--color-warning)">${h.score} pts</div><div style="font-size:0.8rem;">${'⭐'.repeat(h.stars)} ${h.result==='passed'?'✅':'❌'}</div></div>`;
+                    
+                    let rankBadge = `#${index + 1}`;
+                    if(index === 0) rankBadge = '🥇'; else if(index === 1) rankBadge = '🥈'; else if(index === 2) rankBadge = '🥉';
+
+                    item.innerHTML = `
+                        <div>
+                            <span style="font-size:1.5rem; width:40px; display:inline-block;">${rankBadge}</span>
+                            <strong>${h.name}</strong> (${h.hero}) 
+                            <span style="font-size:0.8rem; color:#aaa; margin-left:10px;">ด่าน ${h.level} | ${h.date}</span>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="color:var(--color-warning)">${h.score} pts</div>
+                            <div style="font-size:0.8rem;">${'⭐'.repeat(h.stars)} ${h.result==='passed'?'✅':'❌'}</div>
+                        </div>
+                    `;
                     list.appendChild(item);
                 });
             } catch(e){}
@@ -2030,12 +2119,102 @@
         function cancelHistory() { showScreen(gameState.previousScreen === 'screen-map' ? 'screen-map' : 'screen-start'); }
         function showClearHistoryModal() { document.getElementById('modal-clear-history').classList.remove('hidden'); }
         function hideClearHistoryModal() { document.getElementById('modal-clear-history').classList.add('hidden'); }
-        function clearHistory() { try { localStorage.removeItem('hunters25_history'); updateHistoryUI(); hideClearHistoryModal(); } catch(e) {} }
+        function clearHistory() {
+            try { localStorage.removeItem('hunters25_history'); updateHistoryUI(); hideClearHistoryModal(); } catch(e) {}
+        }
+
+        /* =========================================
+           9. Audio System
+           ========================================= */
+        let audioCtx = null; let bgmOsc = null; let bgmGain = null;
+        function initAudio() {
+            if(!gameState.soundEnabled) return;
+            if(!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} }
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        }
+        function playSound(freq, type, dur) {
+            if(!gameState.soundEnabled) return;
+            initAudio(); if(!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + dur);
+            } catch(e){}
+        }
+        function playBGM() {
+            if(!gameState.soundEnabled) return;
+            initAudio(); if(!audioCtx || bgmOsc) return; 
+            try {
+                bgmOsc = audioCtx.createOscillator(); bgmGain = audioCtx.createGain();
+                bgmOsc.type = 'sine'; bgmOsc.frequency.setValueAtTime(120, audioCtx.currentTime);
+                bgmGain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+                bgmOsc.connect(bgmGain); bgmGain.connect(audioCtx.destination);
+                bgmOsc.start();
+            } catch(e){}
+        }
+        function stopBGM() {
+            if(bgmOsc) { try { bgmOsc.stop(); bgmOsc.disconnect(); } catch(e){} bgmOsc = null; }
+        }
+
+        /* =========================================
+           10. Speech System
+           ========================================= */
+        let lastSpeakTime = 0;
+        let lastSpokenText = "";
+        let lastNarratedHero = null;
+        let welcomeNarrationPlayed = false;
+        let pendingWelcomeNarration = false;
+
+        function speakThai(text) {
+            if (!gameState.narrationEnabled || !('speechSynthesis' in window)) return;
+            const now = performance.now();
+            
+            if (text === lastSpokenText && now - lastSpeakTime < 1000) return;
+
+            window.speechSynthesis.cancel();
+            try {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'th-TH';
+                utterance.rate = 1.0;
+                window.speechSynthesis.speak(utterance);
+                lastSpokenText = text;
+                lastSpeakTime = now;
+            } catch(e) {
+                showToast("ไม่สามารถเล่นเสียงบรรยายได้");
+            }
+        }
+        
+        function stopSpeech() {
+            if('speechSynthesis' in window) window.speechSynthesis.cancel();
+        }
+
+        function playWelcomeNarration() {
+            if (welcomeNarrationPlayed || !gameState.narrationEnabled) return;
+            try {
+                speakThai("ยินดีต้อนรับ เข้าสู่เกม ฮันเตอร์ส สองจุดห้า หน่วยล่าท้าฝุ่น");
+                welcomeNarrationPlayed = true;
+                pendingWelcomeNarration = false;
+            } catch (e) {
+                pendingWelcomeNarration = true;
+            }
+        }
+
+        function narrateHero(hero) {
+            if (lastNarratedHero === hero) return;
+            lastNarratedHero = hero;
+            if (hero === 'sky') speakThai("สกาย ฉายา สายโล่ เอ็นเก้าห้า");
+            else if (hero === 'zee') speakThai("ซี ฉายา จอมลุย");
+            else if (hero === 'bubble') speakThai("บับเบิ้ล ฉายา บอทพิทักษ์ปอด");
+        }
 
         /* =========================================
            31. Cleanup
            ========================================= */
         function stopAllTimers() {
+            if(levelTimerId) { clearInterval(levelTimerId); levelTimerId = null; }
             if(animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
         }
 
@@ -2046,7 +2225,9 @@
         }
         
         function cleanupCurrentLevel() {
-            if (gameState.currentLevel === 5) cleanupLevel5();
+            if (gameState.currentLevel === 5) {
+                cleanupLevel5();
+            }
         }
 
         /* =========================================
@@ -2057,19 +2238,27 @@
         function initGame() {
             loadProgress();
             
-            preloadAssets(() => { showScreen('screen-start'); });
+            preloadAssets(() => {
+                showScreen('screen-start');
+            });
 
             window.addEventListener('pointerdown', () => {
                 if (!globalInteractionDone) {
                     globalInteractionDone = true;
-                    if (gameState.screen === 'screen-start' && pendingWelcomeNarration) playWelcomeNarration();
+                    if (gameState.screen === 'screen-start' && pendingWelcomeNarration) {
+                        playWelcomeNarration();
+                    }
                 }
             }, { passive: true });
 
             document.addEventListener("visibilitychange", async () => {
                 if (document.hidden) {
-                    if (gameState.status === "playing" && !gameState.paused) pauseGame();
-                    if (arLifecycle.status === 'active') await releaseCameraResources(); 
+                    if (gameState.status === "playing" && !gameState.paused) {
+                        pauseGame();
+                    }
+                    if (arLifecycle.status === 'active') {
+                        await releaseCameraResources(); 
+                    }
                 } else {
                     if (gameState.controlMode === 'ar' && arLifecycle.status === 'idle' && gameState.screen === 'screen-game') {
                         showToast('กล้องถูกหยุดชั่วคราว กรุณากดเริ่มกล้องอีกครั้ง');
@@ -2079,6 +2268,7 @@
         }
 
         window.onload = initGame;
+
     </script>
 </body>
 </html>
